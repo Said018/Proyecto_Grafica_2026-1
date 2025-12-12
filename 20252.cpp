@@ -1,19 +1,21 @@
-ï»¿/*-------------------------------------------------------------*/
-/* -------------------   Proyecto Final -----------------------*/
-/*-----------------------    2025-2   -------------------------*/
-/*------------- Alumno Luna Velazquez Said Josue  -------------*/
-//#include <glew.h>
+/*---------------------------------------------------------*/
+/* --------------------------------------------------------*/
+/*-----------------    2025-2   ---------------------------*/
+/*----------- Alumno: Luna Velazquez Said Josue -----------*/
+/*------------- No. Cuenta    318128308     ---------------*/
+
 #include <Windows.h>
 
 #include <glad/glad.h>
-#include <glfw3.h>
+#include <glfw3.h>						//main
 #include <stdlib.h>		
-#include <glm/glm.hpp>
-#include <glm/gtc/matrix_transform.hpp>
+#include <glm/glm.hpp>					//camera y model
+#include <glm/gtc/matrix_transform.hpp>	//camera y model
 #include <glm/gtc/type_ptr.hpp>
 #include <time.h>
 #define STB_IMAGE_IMPLEMENTATION
-#include <stb_image.h>	
+#include <stb_image.h>					//Texture
+#include <cmath>
 
 #define SDL_MAIN_HANDLED
 #include <SDL3/SDL.h>
@@ -27,25 +29,25 @@
 #include <mmsystem.h>
 
 
-void my_input(GLFWwindow* window, int key, int scancode, int action, int mods);
+
 void framebuffer_size_callback(GLFWwindow* window, int width, int height);
 void mouse_callback(GLFWwindow* window, double xpos, double ypos);
 void scroll_callback(GLFWwindow* window, double xoffset, double yoffset);
+void my_input(GLFWwindow* window, int key, int scancode, int action, int mods);
 void animate(void);
 
 // settings
-// Window size
-int SCR_WIDTH = 3800;
-int SCR_HEIGHT = 7600;
-
+unsigned int SCR_WIDTH = 800;
+unsigned int SCR_HEIGHT = 600;
 GLFWmonitor* monitors;
-GLuint VBO, VAO, EBO;
+
+GLuint VBO[3], VAO[3], EBO[3];
 
 //Camera
-Camera camera(glm::vec3(0.0f, 10.0f, 65.0f));
+Camera camera(glm::vec3(0.0f, 10.0f, 190.0f));
 float MovementSpeed = 0.1f;
 GLfloat lastX = SCR_WIDTH / 2.0f,
-lastY = SCR_HEIGHT / 2.0f;
+		lastY = SCR_HEIGHT / 2.0f;
 bool firstMouse = true;
 
 //Timing
@@ -56,19 +58,43 @@ lastFrame = 0.0f;
 
 void getResolution(void);
 void myData(void);							// De la practica 4
-void LoadTextures(void);					// De la prÃ¡ctica 6
-unsigned int generateTextures(char*, bool, bool);	// De la prÃ¡ctica 6
+void LoadTextures(void);					// De la práctica 6
+unsigned int generateTextures(char*, bool, bool);	// De la práctica 6
+
+//For Keyboard
+float	movX = 0.0f,
+movY = 0.0f,
+movZ = -5.0f,
+rotX = 0.0f;
 
 //Texture
 unsigned int	t_smile,
 t_toalla,
 t_unam,
 t_white,
-t_ladrillos,
-t_mosaico_alberca,
 t_agua,
-t_pared_alberca;
-
+t_mosaico_alberca,
+t_pared_alberca,
+t_asta,
+t_gradasjpg,
+t_Hungria,
+t_Australia,
+t_USA,
+t_boya_roja,
+t_asientos,
+t_blanco,
+t_rojo_pelota,
+t_baseplaforma,
+t_baseplataforma,
+t_oro,
+t_plata,
+t_cobre,
+t_podio,
+t_Black,
+t_Cuadro_blanco,
+//t_Solid_red,
+t_Solid_white_bordered,
+t_ladrillos;
 
 //Lighting
 glm::vec3 lightPosition(0.0f, 4.0f, -10.0f);
@@ -79,472 +105,43 @@ glm::vec3 lightColor = glm::vec3(0.7f);
 glm::vec3 diffuseColor = lightColor * glm::vec3(0.5f);
 glm::vec3 ambientColor = diffuseColor * glm::vec3(0.75f);
 
-int estadoAnimacion1 = 1,
-estadoAnimacion2 = 1,
-estadoAnimacion3 = 1,
-estadoAnimacion4 = 1;
+// ------------------- LUCES PULSANTES -------------------
+bool pulseLights = true;
+float pulseMin = 0.35f;
+float pulseMax = 1.00f;
+float pulseSpeed = 0.003f; // ajusta
 
-//For Keyboard
-float	movX = 0.0f,
-movY = 0.0f,
-movZ = -5.0f,
-rotX = 0.0f,
-rotY = 0.0f,
-rotZ = 0.0f;
-
-
-float	angX = 0.0f,
-angY = 0.0f,
-angZ = 0.0f;
 
 // posiciones
 float	movAuto_x = 0.0f,
 movAuto_z = 0.0f,
 orienta = 90.0f;
 bool	animacion = false,
-animacion2 = false,
-animacion3 = false,
-animacion4 = false,
 recorrido1 = true,
 recorrido2 = false,
 recorrido3 = false,
 recorrido4 = false;
 
-//Keyframes (ManipulaciÃ³n y dibujo)
+
+//Keyframes (Manipulación y dibujo)
 float	posX = 0.0f,					//VARIABLES DE DIBUJO
-posY = 0.0f,
-posZ = 0.0f,
-rotRodIzq = 0.0f,
-giroMonito = 0.0f,				//	CAMBIO EN EL CODIGO
-giroCabeza = 0.0f,				//	CAMBIO EN EL CODIGO
-giroBrazoDerecho = 0.0f,		//	CAMBIO EN EL CODIGO
-girohora = 0.0f,				//	CAMBIO EN EL CODIGO
-girominuto = 0.0f,
-giropokeball = 0.0f,
-girotapapokeball = 0.0f,
-//Sillas translacion
-movXsilla1 = 16.0f,
-movYsilla1 = 13.0f,
-movZsilla1 = 0.0f,
-movXsilla2 = 16.0f,
-movYsilla2 = 23.0f,
-movZsilla2 = 0.0f,
-movXsilla3 = 16.0f,
-movYsilla3 = 35.0f,
-movZsilla3 = 0.0f,
-movXsilla4 = 16.0f,
-movYsilla4 = 45.0f,
-movZsilla4 = 0.0f,
-movXsilla5 = 16.0f,
-movYsilla5 = -10.0f,
-movZsilla5 = 0.0f,
-movXsilla6 = 16.0f,
-movYsilla6 = -20.0f,
-movZsilla6 = 0.0f,
-movXsilla7 = 16.0f,
-movYsilla7 = -33.0f,
-movZsilla7 = 0.0f,
-movXsilla8 = 16.0f,
-movYsilla8 = -43.0f,
-movZsilla8 = 0.0f,
-movXsilla9 = -10.0f,
-movYsilla9 = 13.0f,
-movZsilla9 = 0.0f,
-movXsilla10 = -10.0f,
-movYsilla10 = 23.0f,
-movZsilla10 = 0.0f,
-movXsilla11 = -10.0f,
-movYsilla11 = 35.0f,
-movZsilla11 = 0.0f,
-movXsilla12 = -10.0f,
-movYsilla12 = 45.0f,
-movZsilla12 = 0.0f,
-movXsilla13 = -10.0f,
-movYsilla13 = -10.0f,
-movZsilla13 = 0.0f,
-movXsilla14 = -10.0f,
-movYsilla14 = -20.0f,
-movZsilla14 = 0.0f,
-movXsilla15 = -10.0f,
-movYsilla15 = -33.0f,
-movZsilla15 = 0.0f,
-movXsilla16 = -10.0f,
-movYsilla16 = -43.0f,
-movZsilla16 = 0.0f,
-movXsilla17 = -35.0f,
-movYsilla17 = 13.0f,
-movZsilla17 = 0.0f,
-movXsilla18 = -35.0f,
-movYsilla18 = 23.0f,
-movZsilla18 = 0.0f,
-movXsilla19 = -35.0f,
-movYsilla19 = 35.0f,
-movZsilla19 = 0.0f,
-movXsilla20 = -35.0f,
-movYsilla20 = 45.0f,
-movZsilla20 = 0.0f,
-movXsilla21 = -35.0f,
-movYsilla21 = -10.0f,
-movZsilla21 = 0.0f,
-movXsilla22 = -35.0f,
-movYsilla22 = -20.0f,
-movZsilla22 = 0.0f,
-movXsilla23 = -35.0f,
-movYsilla23 = -33.0f,
-movZsilla23 = 0.0f,
-movXsilla24 = -35.0f,
-movYsilla24 = -43.0f,
-movZsilla24 = 0.0f,
-//sillas rotacion SOLO SE OCUPA 1
-giroZsillas = 90.0f,
-//sillas scale SOLO SE OCUPA 1
-scalesillas = 12.0f,
-//Mesas translacion
-movXmesa1 = 30.0f,
-movYmesa1 = 16.0f,
-movZmesa1 = 0.0f,
-movXmesa2 = 30.0f,
-movYmesa2 = 38.0f,
-movZmesa2 = 0.0f,
-movXmesa3 = 30.0f,
-movYmesa3 = -16.0f,
-movZmesa3 = 0.0f,
-movXmesa4 = 30.0f,
-movYmesa4 = -38.0f,
-movZmesa4 = 0.0f,
-movXmesa5 = 5.0f,
-movYmesa5 = 16.0f,
-movZmesa5 = 0.0f,
-movXmesa6 = 5.0f,
-movYmesa6 = 38.0f,
-movZmesa6 = 0.0f,
-movXmesa7 = 5.0f,
-movYmesa7 = -16.0f,
-movZmesa7 = 0.0f,
-movXmesa8 = 5.0f,
-movYmesa8 = -38.0f,
-movZmesa8 = 0.0f,
-movXmesa9 = -20.0f,
-movYmesa9 = 16.0f,
-movZmesa9 = 0.0f,
-movXmesa10 = -20.0f,
-movYmesa10 = 38.0f,
-movZmesa10 = 0.0f,
-movXmesa11 = -20.0f,
-movYmesa11 = -16.0f,
-movZmesa11 = 0.0f,
-movXmesa12 = -20.0f,
-movYmesa12 = -38.0f,
-movZmesa12 = 0.0f,
-//mesas rotacion SOLO SE OCUPA
-giroZmesas = 270.0f,
-//mesas scale SOLO SE OCUPAN 3 QUE SON 1
-scaleXmesas = 19.0f,				//	VARIABLES DE ESCALADO
-scaleYmesas = 15.0f,
-scaleZmesas = 16.0f,
-//display translacion
-movXdisplay1 = 24.0f,
-movYdisplay1 = 16.0f,
-movZdisplay1 = 13.0f,
-movXdisplay2 = 24.0f,
-movYdisplay2 = 39.0f,
-movZdisplay2 = 13.0f,
-movXdisplay3 = 24.0f,
-movYdisplay3 = -16.0f,
-movZdisplay3 = 13.0f,
-movXdisplay4 = 24.0f,
-movYdisplay4 = -39.0f,
-movZdisplay4 = 13.0f,
-movXdisplay5 = -1.0f,
-movYdisplay5 = 16.0f,
-movZdisplay5 = 13.0f,
-movXdisplay6 = -1.0f,
-movYdisplay6 = 38.0f,
-movZdisplay6 = 13.0f,
-movXdisplay7 = -1.0f,
-movYdisplay7 = -16.0f,
-movZdisplay7 = 13.0f,
-movXdisplay8 = -1.0f,
-movYdisplay8 = -39.0f,
-movZdisplay8 = 13.0f,
-movXdisplay9 = -26.0f,
-movYdisplay9 = 16.0f,
-movZdisplay9 = 13.0f,
-movXdisplay10 = -26.0f,
-movYdisplay10 = 39.0f,
-movZdisplay10 = 13.0f,
-movXdisplay11 = -26.0f,
-movYdisplay11 = -16.0f,
-movZdisplay11 = 13.0f,
-movXdisplay12 = -26.0f,
-movYdisplay12 = -39.0f,
-movZdisplay12 = 13.0f,
-//display rotacion SOLO SE OCUPA 1
-giroZdisplay = 270.0f,
-//display scale SOLO SE OCUPA 1
-scaledisplay = 2.5f,				//	VARIABLES DE ESCALADO	
-//PC_Case translacion
-movXpccase1 = 24.0f,
-movYpccase1 = 25.0f,
-movZpccase1 = 16.0f,
-movXpccase2 = 24.0f,
-movYpccase2 = 30.0f,
-movZpccase2 = 16.0f,
-movXpccase3 = 24.0f,
-movYpccase3 = -25.0f,
-movZpccase3 = 16.0f,
-movXpccase4 = 24.0f,
-movYpccase4 = -30.0f,
-movZpccase4 = 16.0f,
-movXpccase5 = -1.0f,
-movYpccase5 = 25.0f,
-movZpccase5 = 16.0f,
-movXpccase6 = -1.0f,
-movYpccase6 = 30.0f,
-movZpccase6 = 16.0f,
-movXpccase7 = -1.0f,
-movYpccase7 = -25.0f,
-movZpccase7 = 16.0f,
-movXpccase8 = -1.0f,
-movYpccase8 = -30.0f,
-movZpccase8 = 16.0f,
-movXpccase9 = -26.0f,
-movYpccase9 = 25.0f,
-movZpccase9 = 16.0f,
-movXpccase10 = -26.0f,
-movYpccase10 = 30.0f,
-movZpccase10 = 16.0f,
-movXpccase11 = -26.0f,
-movYpccase11 = -25.0f,
-movZpccase11 = 16.0f,
-movXpccase12 = -26.0f,
-movYpccase12 = -30.0f,
-movZpccase12 = 16.0f,
-//PC_Case rotacion SOLO SE OCUPA 1
-giroZpccases = 180.0f,
-//PC_Case scale SOLO SSE OCUPA 1
-scalepccases = 2.5f;				//	VARIABLES DE ESCALADO
-
-
+		posY = 0.0f,
+		posZ = 0.0f,
+		rotRodIzq = 0.0f,
+		giroMonito = 0.0f,				//	CAMBIO EN EL CODIGO
+		giroCabeza = 0.0f,				//	CAMBIO EN EL CODIGO
+		giroBrazoDerecho = 0.0f;		//	CAMBIO EN EL CODIGO
 float	incX = 0.0f,					//	VARIABLE DE CALCULO
-incY = 0.0f,
-incZ = 0.0f,
-rotRodIzqInc = 0.0f,
-giroMonitoInc = 0.0f,			//	CAMBIO EN EL CODIGO
-giroCabezaInc = 0.0f,			//	CAMBIO EN EL CODIGO
-giroBrazoDerechoInc = 0.0f,		//	CAMBIO EN EL CODIGO
-girohoraInc = 0.0f,			//	CAMBIO EN EL CODIGO
-girominutoInc = 0.0f,			//	CAMBIO EN EL CODIGO
-giropokeballInc = 0.0f,
-girotapapokeballInc = 0.0f,
+		incY = 0.0f,
+		incZ = 0.0f,
+		rotRodIzqInc = 0.0f,
+		giroMonitoInc = 0.0f,			//	CAMBIO EN EL CODIGO
+	    giroCabezaInc = 0.0f,			//	CAMBIO EN EL CODIGO
+		giroBrazoDerechoInc = 0.0f;		//	CAMBIO EN EL CODIGO
 
-//Sillas translacion
-movXsilla1Inc = 16.0f,
-movYsilla1Inc = 13.0f,
-movZsilla1Inc = 0.0f,
-movXsilla2Inc = 16.0f,
-movYsilla2Inc = 23.0f,
-movZsilla2Inc = 0.0f,
-movXsilla3Inc = 16.0f,
-movYsilla3Inc = 35.0f,
-movZsilla3Inc = 0.0f,
-movXsilla4Inc = 16.0f,
-movYsilla4Inc = 45.0f,
-movZsilla4Inc = 0.0f,
-movXsilla5Inc = 16.0f,
-movYsilla5Inc = -10.0f,
-movZsilla5Inc = 0.0f,
-movXsilla6Inc = 16.0f,
-movYsilla6Inc = -20.0f,
-movZsilla6Inc = 0.0f,
-movXsilla7Inc = 16.0f,
-movYsilla7Inc = -33.0f,
-movZsilla7Inc = 0.0f,
-movXsilla8Inc = 16.0f,
-movYsilla8Inc = -43.0f,
-movZsilla8Inc = 0.0f,
-movXsilla9Inc = -10.0f,
-movYsilla9Inc = 13.0f,
-movZsilla9Inc = 0.0f,
-movXsilla10Inc = -10.0f,
-movYsilla10Inc = 13.0f,
-movZsilla10Inc = 0.0f,
-movXsilla11Inc = -10.0f,
-movYsilla11Inc = 35.0f,
-movZsilla11Inc = 0.0f,
-movXsilla12Inc = -10.0f,
-movYsilla12Inc = 45.0f,
-movZsilla12Inc = 0.0f,
-movXsilla13Inc = -10.0f,
-movYsilla13Inc = -10.0f,
-movZsilla13Inc = 0.0f,
-movXsilla14Inc = -10.0f,
-movYsilla14Inc = -20.0f,
-movZsilla14Inc = 0.0f,
-movXsilla15Inc = -10.0f,
-movYsilla15Inc = -33.0f,
-movZsilla15Inc = 0.0f,
-movXsilla16Inc = -10.0f,
-movYsilla16Inc = -43.0f,
-movZsilla16Inc = 0.0f,
-movXsilla17Inc = -35.0f,
-movYsilla17Inc = 13.0f,
-movZsilla17Inc = 0.0f,
-movXsilla18Inc = -35.0f,
-movYsilla18Inc = 23.0f,
-movZsilla18Inc = 0.0f,
-movXsilla19Inc = -35.0f,
-movYsilla19Inc = 35.0f,
-movZsilla19Inc = 0.0f,
-movXsilla20Inc = -35.0f,
-movYsilla20Inc = 45.0f,
-movZsilla20Inc = 0.0f,
-movXsilla21Inc = -35.0f,
-movYsilla21Inc = -10.0f,
-movZsilla21Inc = 0.0f,
-movXsilla22Inc = -35.0f,
-movYsilla22Inc = -20.0f,
-movZsilla22Inc = 0.0f,
-movXsilla23Inc = -35.0f,
-movYsilla23Inc = -33.0f,
-movZsilla23Inc = 0.0f,
-movXsilla24Inc = -35.0f,
-movYsilla24Inc = -43.0f,
-movZsilla24Inc = 0.0f,
-//sillas rotacion
-giroZsillasInc = 90.0f,
-//sillas scale
-scalesillasInc = 12.0f,
-//Mesas translacion
-movXmesa1Inc = 0.0f,
-movYmesa1Inc = 0.0f,
-movZmesa1Inc = 0.0f,
-movXmesa2Inc = 0.0f,
-movYmesa2Inc = 0.0f,
-movZmesa2Inc = 0.0f,
-movXmesa3Inc = 0.0f,
-movYmesa3Inc = 0.0f,
-movZmesa3Inc = 0.0f,
-movXmesa4Inc = 0.0f,
-movYmesa4Inc = 0.0f,
-movZmesa4Inc = 0.0f,
-movXmesa5Inc = 0.0f,
-movYmesa5Inc = 0.0f,
-movZmesa5Inc = 0.0f,
-movXmesa6Inc = 0.0f,
-movYmesa6Inc = 0.0f,
-movZmesa6Inc = 0.0f,
-movXmesa7Inc = 0.0f,
-movYmesa7Inc = 0.0f,
-movZmesa7Inc = 0.0f,
-movXmesa8Inc = 0.0f,
-movYmesa8Inc = 0.0f,
-movZmesa8Inc = 0.0f,
-movXmesa9Inc = 0.0f,
-movYmesa9Inc = 0.0f,
-movZmesa9Inc = 0.0f,
-movXmesa10Inc = 0.0f,
-movYmesa10Inc = 0.0f,
-movZmesa10Inc = 0.0f,
-movXmesa11Inc = 0.0f,
-movYmesa11Inc = 0.0f,
-movZmesa11Inc = 0.0f,
-movXmesa12Inc = 0.0f,
-movYmesa12Inc = 0.0f,
-movZmesa12Inc = 0.0f,
-//mesas rotacion
-giroZmesasInc = 0.0f,
-//mesas scale
-scaleXmesasInc = 0.0f,				//	VARIABLES DE ESCALADO
-scaleYmesasInc = 0.0f,
-scaleZmesasInc = 0.0f,
-//display translacion
-movXdisplay1Inc = 0.0f,
-movYdisplay1Inc = 0.0f,
-movZdisplay1Inc = 0.0f,
-movXdisplay2Inc = 0.0f,
-movYdisplay2Inc = 0.0f,
-movZdisplay2Inc = 0.0f,
-movXdisplay3Inc = 0.0f,
-movYdisplay3Inc = 0.0f,
-movZdisplay3Inc = 0.0f,
-movXdisplay4Inc = 0.0f,
-movYdisplay4Inc = 0.0f,
-movZdisplay4Inc = 0.0f,
-movXdisplay5Inc = 0.0f,
-movYdisplay5Inc = 0.0f,
-movZdisplay5Inc = 0.0f,
-movXdisplay6Inc = 0.0f,
-movYdisplay6Inc = 0.0f,
-movZdisplay6Inc = 0.0f,
-movXdisplay7Inc = 0.0f,
-movYdisplay7Inc = 0.0f,
-movZdisplay7Inc = 0.0f,
-movXdisplay8Inc = 0.0f,
-movYdisplay8Inc = 0.0f,
-movZdisplay8Inc = 0.0f,
-movXdisplay9Inc = 0.0f,
-movYdisplay9Inc = 0.0f,
-movZdisplay9Inc = 0.0f,
-movXdisplay10Inc = 0.0f,
-movYdisplay10Inc = 0.0f,
-movZdisplay10Inc = 0.0f,
-movXdisplay11Inc = 0.0f,
-movYdisplay11Inc = 0.0f,
-movZdisplay11Inc = 0.0f,
-movXdisplay12Inc = 0.0f,
-movYdisplay12Inc = 0.0f,
-movZdisplay12Inc = 0.0f,
-//display rotacion
-giroZdisplayInc = 0.0f,
-//display scale
-scaledisplayInc = 0.0f,				//	VARIABLES DE ESCALADO	
-//PC_Case translacion
-movXpccase1Inc = 0.0f,
-movYpccase1Inc = 0.0f,
-movZpccase1Inc = 0.0f,
-movXpccase2Inc = 0.0f,
-movYpccase2Inc = 0.0f,
-movZpccase2Inc = 0.0f,
-movXpccase3Inc = 0.0f,
-movYpccase3Inc = 0.0f,
-movZpccase3Inc = 0.0f,
-movXpccase4Inc = 0.0f,
-movYpccase4Inc = 0.0f,
-movZpccase4Inc = 0.0f,
-movXpccase5Inc = 0.0f,
-movYpccase5Inc = 0.0f,
-movZpccase5Inc = 0.0f,
-movXpccase6Inc = 0.0f,
-movYpccase6Inc = 0.0f,
-movZpccase6Inc = 0.0f,
-movXpccase7Inc = 0.0f,
-movYpccase7Inc = 0.0f,
-movZpccase7Inc = 0.0f,
-movXpccase8Inc = 0.0f,
-movYpccase8Inc = 0.0f,
-movZpccase8Inc = 0.0f,
-movXpccase9Inc = 0.0f,
-movYpccase9Inc = 0.0f,
-movZpccase9Inc = 0.0f,
-movXpccase10Inc = 0.0f,
-movYpccase10Inc = 0.0f,
-movZpccase10Inc = 0.0f,
-movXpccase11Inc = 0.0f,
-movYpccase11Inc = 0.0f,
-movZpccase11Inc = 0.0f,
-movXpccase12Inc = 0.0f,
-movYpccase12Inc = 0.0f,
-movZpccase12Inc = 0.0f,
-//PC_Case rotacion
-giroZpccasesInc = 0.0f,
-//PC_Case scale
-scalepccasesInc = 0.0f;				//	VARIABLES DE ESCALADO
-
-#define MAX_FRAMES 18					//NÃºmero de KeyFrames		
+#define MAX_FRAMES 18					//Número de KeyFrames		
 int i_max_steps = 60;
-int i_curr_steps = 0;
-
+int i_curr_steps = 0;					
 typedef struct _frame
 {
 	//Variables para GUARDAR Key Frames
@@ -555,207 +152,104 @@ typedef struct _frame
 	float giroMonito;
 	float giroCabeza;				//	CAMBIO EN EL CODIGO
 	float giroBrazoDerecho;			//	CAMBIO EN EL CODIGO
-	float girohora;				//	CAMBIO EN EL CODIGO
-	float girominuto;			//	CAMBIO EN EL CODIGO
-	float movXsilla1;
-	float movYsilla1;
-	float movZsilla1;
-	float movXsilla2;
-	float movYsilla2;
-	float movZsilla2;
-	float movXsilla3;
-	float movYsilla3;
-	float movZsilla3;
-	float movXsilla4;
-	float movYsilla4;
-	float movZsilla4;
-	float movXsilla5;
-	float movYsilla5;
-	float movZsilla5;
-	float movXsilla6;
-	float movYsilla6;
-	float movZsilla6;
-	float movXsilla7;
-	float movYsilla7;
-	float movZsilla7;
-	float movXsilla8;
-	float movYsilla8;
-	float movZsilla8;
-	float movXsilla9;
-	float movYsilla9;
-	float movZsilla9;
-	float movXsilla10;
-	float movYsilla10;
-	float movZsilla10;
-	float movXsilla11;
-	float movYsilla11;
-	float movZsilla11;
-	float movXsilla12;
-	float movYsilla12;
-	float movZsilla12;
-	float movXsilla13;
-	float movYsilla13;
-	float movZsilla13;
-	float movXsilla14;
-	float movYsilla14;
-	float movZsilla14;
-	float movXsilla15;
-	float movYsilla15;
-	float movZsilla15;
-	float movXsilla16;
-	float movYsilla16;
-	float movZsilla16;
-	float movXsilla17;
-	float movYsilla17;
-	float movZsilla17;
-	float movXsilla18;
-	float movYsilla18;
-	float movZsilla18;
-	float movXsilla19;
-	float movYsilla19;
-	float movZsilla19;
-	float movXsilla20;
-	float movYsilla20;
-	float movZsilla20;
-	float movXsilla21;
-	float movYsilla21;
-	float movZsilla21;
-	float movXsilla22;
-	float movYsilla22;
-	float movZsilla22;
-	float movXsilla23;
-	float movYsilla23;
-	float movZsilla23;
-	float movXsilla24;
-	float movYsilla24;
-	float movZsilla24;
-	float giroZsillas;
-	float scalesillas;
-	float movXmesa1;
-	float movYmesa1;
-	float movZmesa1;
-	float movXmesa2;
-	float movYmesa2;
-	float movZmesa2;
-	float movXmesa3;
-	float movYmesa3;
-	float movZmesa3;
-	float movXmesa4;
-	float movYmesa4;
-	float movZmesa4;
-	float movXmesa5;
-	float movYmesa5;
-	float movZmesa5;
-	float movXmesa6;
-	float movYmesa6;
-	float movZmesa6;
-	float movXmesa7;
-	float movYmesa7;
-	float movZmesa7;
-	float movXmesa8;
-	float movYmesa8;
-	float movZmesa8;
-	float movXmesa9;
-	float movYmesa9;
-	float movZmesa9;
-	float movXmesa10;
-	float movYmesa10;
-	float movZmesa10;
-	float movXmesa11;
-	float movYmesa11;
-	float movZmesa11;
-	float movXmesa12;
-	float movYmesa12;
-	float movZmesa12;
-	float giroZmesas;
-	float scaleXmesas;
-	float scaleYmesas;
-	float scaleZmesas;
-	float movXdisplay1;
-	float movYdisplay1;
-	float movZdisplay1;
-	float movXdisplay2;
-	float movYdisplay2;
-	float movZdisplay2;
-	float movXdisplay3;
-	float movYdisplay3;
-	float movZdisplay3;
-	float movXdisplay4;
-	float movYdisplay4;
-	float movZdisplay4;
-	float movXdisplay5;
-	float movYdisplay5;
-	float movZdisplay5;
-	float movXdisplay6;
-	float movYdisplay6;
-	float movZdisplay6;
-	float movXdisplay7;
-	float movYdisplay7;
-	float movZdisplay7;
-	float movXdisplay8;
-	float movYdisplay8;
-	float movZdisplay8;
-	float movXdisplay9;
-	float movYdisplay9;
-	float movZdisplay9;
-	float movXdisplay10;
-	float movYdisplay10;
-	float movZdisplay10;
-	float movXdisplay11;
-	float movYdisplay11;
-	float movZdisplay11;
-	float movXdisplay12;
-	float movYdisplay12;
-	float movZdisplay12;
-	float giroZdisplay;
-	float scaledisplay;
-	float movXpccase1;
-	float movYpccase1;
-	float movZpccase1;
-	float movXpccase2;
-	float movYpccase2;
-	float movZpccase2;
-	float movXpccase3;
-	float movYpccase3;
-	float movZpccase3;
-	float movXpccase4;
-	float movYpccase4;
-	float movZpccase4;
-	float movXpccase5;
-	float movYpccase5;
-	float movZpccase5;
-	float movXpccase6;
-	float movYpccase6;
-	float movZpccase6;
-	float movXpccase7;
-	float movYpccase7;
-	float movZpccase7;
-	float movXpccase8;
-	float movYpccase8;
-	float movZpccase8;
-	float movXpccase9;
-	float movYpccase9;
-	float movZpccase9;
-	float movXpccase10;
-	float movYpccase10;
-	float movZpccase10;
-	float movXpccase11;
-	float movYpccase11;
-	float movZpccase11;
-	float movXpccase12;
-	float movYpccase12;
-	float movZpccase12;
-	float giroZpccases;
-	float scalepccases;
-	float giropokeball;
-	float girotapapokeball;
 
 }FRAME;
 
 FRAME KeyFrame[MAX_FRAMES];
-int FrameIndex = 10;			//introducir nÃºmero en caso de tener Key guardados //	SIRVE PARA YA HACER LAS ANIMACIONES CON SOLO COMPILAR
+int FrameIndex = 6;			//introducir número en caso de tener Key guardados //	SIRVE PARA YA HACER LAS ANIMACIONES CON SOLO COMPILAR
 bool play = false;
 int playIndex = 0;
+
+// ------------------- ANIMACION PELOTA: PERIMETRO + REBOTE + GIRO -------------------
+bool ballFollowPerimeter = true;
+
+// Posición pelota
+float ballX = 0.0f, ballY = 0.0f, ballZ = 0.0f;
+
+// Rotación pelota (grados)
+float ballRot = 0.0f;
+
+// Parámetros
+float ballSpeed = 35.0f;      // unidades/seg (ajusta)
+float ballRadius = 1.2f;      // radio "visual" del modelo (ajusta si rota raro)
+float bounceAmp = 1.0f;       // amplitud del rebote
+float bounceFreq = 2.0f;      // rebotes por segundo aprox (ajusta)
+float bouncePhase = 0.0f;     // fase acumulada
+
+// Perímetro 
+float poolMinX = -55.0f;
+float poolMaxX = 55.0f;
+float poolMinZ = -25.0f;
+float poolMaxZ = 25.0f;
+
+// Altura base 
+float ballBaseY = 23.0f;
+
+// 0:+X, 1:+Z, 2:-X, 3:-Z
+int ballEdge = 0;
+
+// ------------------- ANIMACION POKEBALL + PODIUM -------------------
+enum PBState { PB_IDLE = 0, PB_MOVE, PB_OPENING, PB_SUCK, PB_CLOSING, PB_DONE };
+PBState pbState = PB_IDLE;
+bool pbSequence = false;
+
+
+// Posiciones 
+glm::vec3 podiumPos = glm::vec3(0.0f, 0.0f, 0.0f);    // donde está tu podium (mundo)
+glm::vec3 pbStartPos = glm::vec3(10.0f, 60.0f, 10.0f);    // donde inicia la pokeball
+glm::vec3 pbPos = pbStartPos;
+
+// Escalas base
+float pbScaleWorld = 10.0f;   // tu escala actual de pokeball
+float podiumScaleWorld = 10.0f;   // tu escala actual de podium
+
+// Movimiento pokeball
+float pbMoveSpeed = 45.0f;       // unidades/seg
+float pbStopDist = 8.0f;        // distancia para detenerse "frente" al podio
+
+// Apertura tapa
+float pbOpenAngle = 0.0f;        // grados
+float pbOpenMax = 120.0f;      // grados apertura
+float pbOpenSpeed = 180.0f;      // grados/seg
+
+// Succión del podio
+bool  podiumVisible = true;
+glm::vec3 podiumAnimPos = podiumPos;
+float podiumAnimScale = podiumScaleWorld;
+float podiumShrinkSpeed = 1.2f;  // escala/seg (reduce rápido)
+float podiumPullSpeed = 60.0f; // unidades/seg (jalar hacia pokeball)
+
+// Centro de "captura" (AJUSTA Y según tu pokeball)
+glm::vec3 pbCaptureLocal = glm::vec3(0.0f, 2.5f, 0.0f); // punto dentro de la pokeball
+
+glm::vec3 pbTopHingeLocal = glm::vec3(0.0f, 2.2f, 0.0f);  // punto bisagra
+glm::vec3 pbTopPivotAxis = glm::vec3(1.0f, 0.0f, 0.0f);  // eje de giro tapa
+
+
+// ------------------- ANIMACION GRADAS: ROTAR + SUBIR + DESAPARECER -------------------
+bool  gradesAnim = true;
+float gradesRotY = 0.0f;
+float gradesScale01 = 1.0f;
+float gradesLiftY = 0.0f;
+
+float gradesRotSpeed = 45.0f;
+float gradesFadeSpeed = 0.15f;
+float gradesLiftSpeed = 12.0f;
+float gradesLiftMax = 120.0f;
+
+
+// ------------------- AGUA PROCEDURAL (GLOBALS) -------------------
+float waterOffsetY = 0.0f;
+float waterTime = 0.0f;
+float waterAmp = 0.30f;      // altura ola
+float waterSpeed = 2.0f;     // velocidad ola
+
+// ------------------- BANDERAS SWING -------------------
+bool flagsSwing = true;
+float flagAmp = 10.0f;      // grados
+float flagSpeed = 0.004f;   // ajusta
+
+
 
 void saveFrame(void)
 {
@@ -770,400 +264,14 @@ void saveFrame(void)
 	KeyFrame[FrameIndex].giroMonito = giroMonito;
 	KeyFrame[FrameIndex].giroCabeza = giroCabeza;								//	CAMBIO EN EL CODIGO
 	KeyFrame[FrameIndex].giroBrazoDerecho = giroBrazoDerecho;					//	CAMBIO EN EL CODIGO
-	KeyFrame[FrameIndex].girohora = girohora;								//	CAMBIO EN EL CODIGO
-	KeyFrame[FrameIndex].girominuto = girominuto;								//	CAMBIO EN EL CODIGO
-	KeyFrame[FrameIndex].giropokeball = giropokeball;
-	KeyFrame[FrameIndex].girotapapokeball = girotapapokeball;
-	KeyFrame[FrameIndex].movXsilla1 = movXsilla1;
-	KeyFrame[FrameIndex].movYsilla1 = movYsilla1;
-	KeyFrame[FrameIndex].movZsilla1 = movZsilla1;
-	KeyFrame[FrameIndex].movXsilla2 = movXsilla2;
-	KeyFrame[FrameIndex].movYsilla2 = movYsilla2;
-	KeyFrame[FrameIndex].movZsilla2 = movZsilla2;
-	KeyFrame[FrameIndex].movXsilla3 = movXsilla3;
-	KeyFrame[FrameIndex].movYsilla3 = movYsilla3;
-	KeyFrame[FrameIndex].movZsilla3 = movZsilla3;
-	KeyFrame[FrameIndex].movXsilla4 = movXsilla4;
-	KeyFrame[FrameIndex].movYsilla4 = movYsilla4;
-	KeyFrame[FrameIndex].movZsilla4 = movZsilla4;
-	KeyFrame[FrameIndex].movXsilla5 = movXsilla5;
-	KeyFrame[FrameIndex].movYsilla5 = movYsilla5;
-	KeyFrame[FrameIndex].movZsilla5 = movZsilla5;
-	KeyFrame[FrameIndex].movXsilla6 = movXsilla6;
-	KeyFrame[FrameIndex].movYsilla6 = movYsilla6;
-	KeyFrame[FrameIndex].movZsilla6 = movZsilla6;
-	KeyFrame[FrameIndex].movXsilla7 = movXsilla7;
-	KeyFrame[FrameIndex].movYsilla7 = movYsilla7;
-	KeyFrame[FrameIndex].movZsilla7 = movZsilla7;
-	KeyFrame[FrameIndex].movXsilla8 = movXsilla8;
-	KeyFrame[FrameIndex].movYsilla8 = movYsilla8;
-	KeyFrame[FrameIndex].movZsilla8 = movZsilla8;
-	KeyFrame[FrameIndex].movXsilla9 = movXsilla9;
-	KeyFrame[FrameIndex].movYsilla9 = movYsilla9;
-	KeyFrame[FrameIndex].movZsilla9 = movZsilla9;
-	KeyFrame[FrameIndex].movXsilla10 = movXsilla10;
-	KeyFrame[FrameIndex].movYsilla10 = movYsilla10;
-	KeyFrame[FrameIndex].movZsilla10 = movZsilla10;
-	KeyFrame[FrameIndex].movXsilla11 = movXsilla11;
-	KeyFrame[FrameIndex].movYsilla11 = movYsilla11;
-	KeyFrame[FrameIndex].movZsilla11 = movZsilla11;
-	KeyFrame[FrameIndex].movXsilla12 = movXsilla12;
-	KeyFrame[FrameIndex].movYsilla12 = movYsilla12;
-	KeyFrame[FrameIndex].movZsilla12 = movZsilla12;
-	KeyFrame[FrameIndex].movXsilla13 = movXsilla13;
-	KeyFrame[FrameIndex].movYsilla13 = movYsilla13;
-	KeyFrame[FrameIndex].movZsilla13 = movZsilla13;
-	KeyFrame[FrameIndex].movXsilla14 = movXsilla14;
-	KeyFrame[FrameIndex].movYsilla14 = movYsilla14;
-	KeyFrame[FrameIndex].movZsilla14 = movZsilla14;
-	KeyFrame[FrameIndex].movXsilla15 = movXsilla15;
-	KeyFrame[FrameIndex].movYsilla15 = movYsilla15;
-	KeyFrame[FrameIndex].movZsilla15 = movZsilla15;
-	KeyFrame[FrameIndex].movXsilla16 = movXsilla16;
-	KeyFrame[FrameIndex].movYsilla16 = movYsilla16;
-	KeyFrame[FrameIndex].movZsilla16 = movZsilla16;
-	KeyFrame[FrameIndex].movXsilla17 = movXsilla17;
-	KeyFrame[FrameIndex].movYsilla17 = movYsilla17;
-	KeyFrame[FrameIndex].movZsilla17 = movZsilla17;
-	KeyFrame[FrameIndex].movXsilla18 = movXsilla18;
-	KeyFrame[FrameIndex].movYsilla18 = movYsilla18;
-	KeyFrame[FrameIndex].movZsilla18 = movZsilla18;
-	KeyFrame[FrameIndex].movXsilla19 = movXsilla19;
-	KeyFrame[FrameIndex].movYsilla19 = movYsilla19;
-	KeyFrame[FrameIndex].movZsilla19 = movZsilla19;
-	KeyFrame[FrameIndex].movXsilla20 = movXsilla20;
-	KeyFrame[FrameIndex].movYsilla20 = movYsilla20;
-	KeyFrame[FrameIndex].movZsilla20 = movZsilla20;
-	KeyFrame[FrameIndex].movXsilla21 = movXsilla21;
-	KeyFrame[FrameIndex].movYsilla21 = movYsilla21;
-	KeyFrame[FrameIndex].movZsilla21 = movZsilla21;
-	KeyFrame[FrameIndex].movXsilla22 = movXsilla22;
-	KeyFrame[FrameIndex].movYsilla22 = movYsilla22;
-	KeyFrame[FrameIndex].movZsilla22 = movZsilla22;
-	KeyFrame[FrameIndex].movXsilla23 = movXsilla23;
-	KeyFrame[FrameIndex].movYsilla23 = movYsilla23;
-	KeyFrame[FrameIndex].movZsilla23 = movZsilla23;
-	KeyFrame[FrameIndex].movXsilla24 = movXsilla24;
-	KeyFrame[FrameIndex].movYsilla24 = movYsilla24;
-	KeyFrame[FrameIndex].movZsilla24 = movZsilla24;
-	KeyFrame[FrameIndex].giroZsillas = giroZsillas;
-	KeyFrame[FrameIndex].scalesillas = scalesillas;
-	KeyFrame[FrameIndex].movXmesa1 = movXmesa1;
-	KeyFrame[FrameIndex].movYmesa1 = movYmesa1;
-	KeyFrame[FrameIndex].movZmesa1 = movZmesa1;
-	KeyFrame[FrameIndex].movXmesa2 = movXmesa2;
-	KeyFrame[FrameIndex].movYmesa2 = movYmesa2;
-	KeyFrame[FrameIndex].movZmesa2 = movZmesa2;
-	KeyFrame[FrameIndex].movXmesa3 = movXmesa3;
-	KeyFrame[FrameIndex].movYmesa3 = movYmesa3;
-	KeyFrame[FrameIndex].movZmesa3 = movZmesa3;
-	KeyFrame[FrameIndex].movXmesa4 = movXmesa4;
-	KeyFrame[FrameIndex].movYmesa4 = movYmesa4;
-	KeyFrame[FrameIndex].movZmesa4 = movZmesa4;
-	KeyFrame[FrameIndex].movXmesa5 = movXmesa5;
-	KeyFrame[FrameIndex].movYmesa5 = movYmesa5;
-	KeyFrame[FrameIndex].movZmesa5 = movZmesa5;
-	KeyFrame[FrameIndex].movXmesa6 = movXmesa6;
-	KeyFrame[FrameIndex].movYmesa6 = movYmesa6;
-	KeyFrame[FrameIndex].movZmesa6 = movZmesa6;
-	KeyFrame[FrameIndex].movXmesa7 = movXmesa7;
-	KeyFrame[FrameIndex].movYmesa7 = movYmesa7;
-	KeyFrame[FrameIndex].movZmesa7 = movZmesa7;
-	KeyFrame[FrameIndex].movXmesa8 = movXmesa8;
-	KeyFrame[FrameIndex].movYmesa8 = movYmesa8;
-	KeyFrame[FrameIndex].movZmesa8 = movZmesa8;
-	KeyFrame[FrameIndex].movXmesa9 = movXmesa9;
-	KeyFrame[FrameIndex].movYmesa9 = movYmesa9;
-	KeyFrame[FrameIndex].movZmesa9 = movZmesa9;
-	KeyFrame[FrameIndex].movXmesa10 = movXmesa10;
-	KeyFrame[FrameIndex].movYmesa10 = movYmesa10;
-	KeyFrame[FrameIndex].movZmesa10 = movZmesa10;
-	KeyFrame[FrameIndex].movXmesa11 = movXmesa11;
-	KeyFrame[FrameIndex].movYmesa11 = movYmesa11;
-	KeyFrame[FrameIndex].movZmesa11 = movZmesa11;
-	KeyFrame[FrameIndex].movXmesa12 = movXmesa12;
-	KeyFrame[FrameIndex].movYmesa12 = movYmesa12;
-	KeyFrame[FrameIndex].movZmesa12 = movZmesa12;
-	KeyFrame[FrameIndex].giroZmesas = giroZmesas;
-	KeyFrame[FrameIndex].scaleXmesas = scaleXmesas;
-	KeyFrame[FrameIndex].scaleYmesas = scaleYmesas;
-	KeyFrame[FrameIndex].scaleZmesas = scaleZmesas;
-	KeyFrame[FrameIndex].movXdisplay1 = movXdisplay1;
-	KeyFrame[FrameIndex].movYdisplay1 = movYdisplay1;
-	KeyFrame[FrameIndex].movZdisplay1 = movZdisplay1;
-	KeyFrame[FrameIndex].movXdisplay2 = movXdisplay2;
-	KeyFrame[FrameIndex].movYdisplay2 = movYdisplay2;
-	KeyFrame[FrameIndex].movZdisplay2 = movZdisplay2;
-	KeyFrame[FrameIndex].movXdisplay3 = movXdisplay3;
-	KeyFrame[FrameIndex].movYdisplay3 = movYdisplay3;
-	KeyFrame[FrameIndex].movZdisplay3 = movZdisplay3;
-	KeyFrame[FrameIndex].movXdisplay4 = movXdisplay4;
-	KeyFrame[FrameIndex].movYdisplay4 = movYdisplay4;
-	KeyFrame[FrameIndex].movZdisplay4 = movZdisplay4;
-	KeyFrame[FrameIndex].movXdisplay5 = movXdisplay5;
-	KeyFrame[FrameIndex].movYdisplay5 = movYdisplay5;
-	KeyFrame[FrameIndex].movZdisplay5 = movZdisplay5;
-	KeyFrame[FrameIndex].movXdisplay6 = movXdisplay6;
-	KeyFrame[FrameIndex].movYdisplay6 = movYdisplay6;
-	KeyFrame[FrameIndex].movZdisplay6 = movZdisplay6;
-	KeyFrame[FrameIndex].movXdisplay7 = movXdisplay7;
-	KeyFrame[FrameIndex].movYdisplay7 = movYdisplay7;
-	KeyFrame[FrameIndex].movZdisplay7 = movZdisplay7;
-	KeyFrame[FrameIndex].movXdisplay8 = movXdisplay8;
-	KeyFrame[FrameIndex].movYdisplay8 = movYdisplay8;
-	KeyFrame[FrameIndex].movZdisplay8 = movZdisplay8;
-	KeyFrame[FrameIndex].movXdisplay9 = movXdisplay9;
-	KeyFrame[FrameIndex].movYdisplay9 = movYdisplay9;
-	KeyFrame[FrameIndex].movZdisplay9 = movZdisplay9;
-	KeyFrame[FrameIndex].movXdisplay10 = movXdisplay10;
-	KeyFrame[FrameIndex].movYdisplay10 = movYdisplay10;
-	KeyFrame[FrameIndex].movZdisplay10 = movZdisplay10;
-	KeyFrame[FrameIndex].movXdisplay11 = movXdisplay11;
-	KeyFrame[FrameIndex].movYdisplay11 = movYdisplay11;
-	KeyFrame[FrameIndex].movZdisplay11 = movZdisplay11;
-	KeyFrame[FrameIndex].movXdisplay12 = movXdisplay12;
-	KeyFrame[FrameIndex].movYdisplay12 = movYdisplay12;
-	KeyFrame[FrameIndex].movZdisplay12 = movZdisplay12;
-	KeyFrame[FrameIndex].giroZdisplay = giroZdisplay;
-	KeyFrame[FrameIndex].scaledisplay = scaledisplay;
-	KeyFrame[FrameIndex].movXpccase1 = movXpccase1;
-	KeyFrame[FrameIndex].movYpccase1 = movYpccase1;
-	KeyFrame[FrameIndex].movZpccase1 = movZpccase1;
-	KeyFrame[FrameIndex].movXpccase2 = movXpccase2;
-	KeyFrame[FrameIndex].movYpccase2 = movYpccase2;
-	KeyFrame[FrameIndex].movZpccase2 = movZpccase2;
-	KeyFrame[FrameIndex].movXpccase3 = movXpccase3;
-	KeyFrame[FrameIndex].movYpccase3 = movYpccase3;
-	KeyFrame[FrameIndex].movZpccase3 = movZpccase3;
-	KeyFrame[FrameIndex].movXpccase4 = movXpccase4;
-	KeyFrame[FrameIndex].movYpccase4 = movYpccase4;
-	KeyFrame[FrameIndex].movZpccase4 = movZpccase4;
-	KeyFrame[FrameIndex].movXpccase5 = movXpccase5;
-	KeyFrame[FrameIndex].movYpccase5 = movYpccase5;
-	KeyFrame[FrameIndex].movZpccase5 = movZpccase5;
-	KeyFrame[FrameIndex].movXpccase6 = movXpccase6;
-	KeyFrame[FrameIndex].movYpccase6 = movYpccase6;
-	KeyFrame[FrameIndex].movZpccase6 = movZpccase6;
-	KeyFrame[FrameIndex].movXpccase7 = movXpccase7;
-	KeyFrame[FrameIndex].movYpccase7 = movYpccase7;
-	KeyFrame[FrameIndex].movZpccase7 = movZpccase7;
-	KeyFrame[FrameIndex].movXpccase8 = movXpccase8;
-	KeyFrame[FrameIndex].movYpccase8 = movYpccase8;
-	KeyFrame[FrameIndex].movZpccase8 = movZpccase8;
-	KeyFrame[FrameIndex].movXpccase9 = movXpccase9;
-	KeyFrame[FrameIndex].movYpccase9 = movYpccase9;
-	KeyFrame[FrameIndex].movZpccase9 = movZpccase9;
-	KeyFrame[FrameIndex].movXpccase10 = movXpccase10;
-	KeyFrame[FrameIndex].movYpccase10 = movYpccase10;
-	KeyFrame[FrameIndex].movZpccase10 = movZpccase10;
-	KeyFrame[FrameIndex].movXpccase11 = movXpccase11;
-	KeyFrame[FrameIndex].movYpccase11 = movYpccase11;
-	KeyFrame[FrameIndex].movZpccase11 = movZpccase11;
-	KeyFrame[FrameIndex].movXpccase12 = movXpccase12;
-	KeyFrame[FrameIndex].movYpccase12 = movYpccase12;
-	KeyFrame[FrameIndex].movZpccase12 = movZpccase12;
-	KeyFrame[FrameIndex].giroZpccases = giroZpccases;
-	KeyFrame[FrameIndex].scalepccases = scalepccases;
-
 
 	std::cout << "posX = " << posX << std::endl;								//CAMBIO EN EL CODIGO
 	std::cout << "posZ = " << posZ << std::endl;								//CAMBIO EN EL CODIGO
 	std::cout << "Giro = " << giroMonito << std::endl;							//CAMBIO EN EL CODIGO	
-	std::cout << "Cabeza = " << giroCabeza << std::endl;						//CAMBIO EN EL CODIGO
-	std::cout << "movXsilla1 = " << movXsilla1 << std::endl;
-	std::cout << "movYsilla1 = " << movYsilla1 << std::endl;
-	std::cout << "movZsilla1 = " << movZsilla1 << std::endl;
-	std::cout << "movXsilla2 = " << movXsilla2 << std::endl;
-	std::cout << "movYsilla2 = " << movYsilla2 << std::endl;
-	std::cout << "movZsilla2 = " << movZsilla2 << std::endl;
-	std::cout << "movXsilla3 = " << movXsilla3 << std::endl;
-	std::cout << "movYsilla3 = " << movYsilla3 << std::endl;
-	std::cout << "movZsilla3 = " << movZsilla3 << std::endl;
-	std::cout << "movXsilla4 = " << movXsilla4 << std::endl;
-	std::cout << "movYsilla4 = " << movYsilla4 << std::endl;
-	std::cout << "movZsilla4 = " << movZsilla4 << std::endl;
-	std::cout << "movXsilla5 = " << movXsilla5 << std::endl;
-	std::cout << "movYsilla5 = " << movYsilla5 << std::endl;
-	std::cout << "movZsilla5 = " << movZsilla5 << std::endl;
-	std::cout << "movXsilla6 = " << movXsilla6 << std::endl;
-	std::cout << "movYsilla6 = " << movYsilla6 << std::endl;
-	std::cout << "movZsilla6 = " << movZsilla6 << std::endl;
-	std::cout << "movXsilla7 = " << movXsilla7 << std::endl;
-	std::cout << "movYsilla7 = " << movYsilla7 << std::endl;
-	std::cout << "movZsilla7 = " << movZsilla7 << std::endl;
-	std::cout << "movXsilla8 = " << movXsilla8 << std::endl;
-	std::cout << "movYsilla8 = " << movYsilla8 << std::endl;
-	std::cout << "movZsilla8 = " << movZsilla8 << std::endl;
-	std::cout << "movXsilla9 = " << movXsilla9 << std::endl;
-	std::cout << "movYsilla9 = " << movYsilla9 << std::endl;
-	std::cout << "movZsilla9 = " << movZsilla9 << std::endl;
-	std::cout << "movXsilla10 = " << movXsilla10 << std::endl;
-	std::cout << "movYsilla10 = " << movYsilla10 << std::endl;
-	std::cout << "movZsilla10 = " << movZsilla10 << std::endl;
-	std::cout << "movXsilla11 = " << movXsilla11 << std::endl;
-	std::cout << "movYsilla11 = " << movYsilla11 << std::endl;
-	std::cout << "movZsilla11 = " << movZsilla11 << std::endl;
-	std::cout << "movXsilla12 = " << movXsilla12 << std::endl;
-	std::cout << "movYsilla12 = " << movYsilla12 << std::endl;
-	std::cout << "movZsilla12 = " << movZsilla12 << std::endl;
-	std::cout << "movXsilla13 = " << movXsilla13 << std::endl;
-	std::cout << "movYsilla13 = " << movYsilla13 << std::endl;
-	std::cout << "movZsilla13 = " << movZsilla13 << std::endl;
-	std::cout << "movXsilla14 = " << movXsilla14 << std::endl;
-	std::cout << "movYsilla14 = " << movYsilla14 << std::endl;
-	std::cout << "movZsilla14 = " << movZsilla14 << std::endl;
-	std::cout << "movXsilla15 = " << movXsilla15 << std::endl;
-	std::cout << "movYsilla15 = " << movYsilla15 << std::endl;
-	std::cout << "movZsilla15 = " << movZsilla15 << std::endl;
-	std::cout << "movXsilla16 = " << movXsilla16 << std::endl;
-	std::cout << "movYsilla16 = " << movYsilla16 << std::endl;
-	std::cout << "movZsilla16 = " << movZsilla16 << std::endl;
-	std::cout << "movXsilla17 = " << movXsilla17 << std::endl;
-	std::cout << "movYsilla17 = " << movYsilla17 << std::endl;
-	std::cout << "movZsilla17 = " << movZsilla17 << std::endl;
-	std::cout << "movXsilla18 = " << movXsilla18 << std::endl;
-	std::cout << "movYsilla18 = " << movYsilla18 << std::endl;
-	std::cout << "movZsilla18 = " << movZsilla18 << std::endl;
-	std::cout << "movXsilla19 = " << movXsilla19 << std::endl;
-	std::cout << "movYsilla19 = " << movYsilla19 << std::endl;
-	std::cout << "movZsilla19 = " << movZsilla19 << std::endl;
-	std::cout << "movXsilla20 = " << movXsilla20 << std::endl;
-	std::cout << "movYsilla20 = " << movYsilla20 << std::endl;
-	std::cout << "movZsilla20 = " << movZsilla20 << std::endl;
-	std::cout << "movXsilla21 = " << movXsilla21 << std::endl;
-	std::cout << "movYsilla21 = " << movYsilla21 << std::endl;
-	std::cout << "movZsilla21 = " << movZsilla21 << std::endl;
-	std::cout << "movXsilla22 = " << movXsilla22 << std::endl;
-	std::cout << "movYsilla22 = " << movYsilla22 << std::endl;
-	std::cout << "movZsilla22 = " << movZsilla22 << std::endl;
-	std::cout << "movXsilla23 = " << movXsilla23 << std::endl;
-	std::cout << "movYsilla23 = " << movYsilla23 << std::endl;
-	std::cout << "movZsilla23 = " << movZsilla23 << std::endl;
-	std::cout << "movXsilla24 = " << movXsilla24 << std::endl;
-	std::cout << "movYsilla24 = " << movYsilla24 << std::endl;
-	std::cout << "movZsilla24 = " << movZsilla24 << std::endl;
-	std::cout << "giroZsillas = " << giroZsillas << std::endl;		//
-	std::cout << "scalesillas = " << scalesillas << std::endl;		//
-	std::cout << "movXmesa1 = " << movXmesa1 << std::endl;
-	std::cout << "movYmesa1 = " << movYmesa1 << std::endl;
-	std::cout << "movZmesa1 = " << movZmesa1 << std::endl;
-	std::cout << "movXmesa2 = " << movXmesa2 << std::endl;
-	std::cout << "movYmesa2 = " << movYmesa2 << std::endl;
-	std::cout << "movZmesa2 = " << movZmesa2 << std::endl;
-	std::cout << "movXmesa3 = " << movXmesa3 << std::endl;
-	std::cout << "movYmesa3 = " << movYmesa3 << std::endl;
-	std::cout << "movZmesa3 = " << movZmesa3 << std::endl;
-	std::cout << "movXmesa4 = " << movXmesa4 << std::endl;
-	std::cout << "movYmesa4 = " << movYmesa4 << std::endl;
-	std::cout << "movZmesa4 = " << movZmesa4 << std::endl;
-	std::cout << "movXmesa5 = " << movXmesa5 << std::endl;
-	std::cout << "movYmesa5 = " << movYmesa5 << std::endl;
-	std::cout << "movZmesa5 = " << movZmesa5 << std::endl;
-	std::cout << "movXmesa6 = " << movXmesa6 << std::endl;
-	std::cout << "movYmesa6 = " << movYmesa6 << std::endl;
-	std::cout << "movZmesa6 = " << movZmesa6 << std::endl;
-	std::cout << "movXmesa7 = " << movXmesa7 << std::endl;
-	std::cout << "movYmesa7 = " << movYmesa7 << std::endl;
-	std::cout << "movZmesa7 = " << movZmesa7 << std::endl;
-	std::cout << "movXmesa8 = " << movXmesa8 << std::endl;
-	std::cout << "movYmesa8 = " << movYmesa8 << std::endl;
-	std::cout << "movZmesa8 = " << movZmesa8 << std::endl;
-	std::cout << "movXmesa9 = " << movXmesa9 << std::endl;
-	std::cout << "movYmesa9 = " << movYmesa9 << std::endl;
-	std::cout << "movZmesa9 = " << movZmesa9 << std::endl;
-	std::cout << "movXmesa10 = " << movXmesa10 << std::endl;
-	std::cout << "movYmesa10 = " << movYmesa10 << std::endl;
-	std::cout << "movZmesa10 = " << movZmesa10 << std::endl;
-	std::cout << "movXmesa11 = " << movXmesa11 << std::endl;
-	std::cout << "movYmesa11 = " << movYmesa11 << std::endl;
-	std::cout << "movZmesa11 = " << movZmesa11 << std::endl;
-	std::cout << "movXmesa12 = " << movXmesa12 << std::endl;
-	std::cout << "movYmesa12 = " << movYmesa12 << std::endl;
-	std::cout << "movZmesa12 = " << movZmesa12 << std::endl;
-	std::cout << "giroZmesa1 = " << giroZmesas << std::endl;		//
-	std::cout << "scaleXmesa1 = " << scaleXmesas << std::endl;		//
-	std::cout << "scaleYmesa1 = " << scaleYmesas << std::endl;		//
-	std::cout << "scaleZmesa1 = " << scaleZmesas << std::endl;		//
-	std::cout << "movXdisplay1 = " << movXdisplay1 << std::endl;
-	std::cout << "movYdisplay1 = " << movYdisplay1 << std::endl;
-	std::cout << "movZdisplay1 = " << movZdisplay1 << std::endl;
-	std::cout << "movXdisplay2 = " << movXdisplay2 << std::endl;
-	std::cout << "movYdisplay2 = " << movYdisplay2 << std::endl;
-	std::cout << "movZdisplay2 = " << movZdisplay2 << std::endl;
-	std::cout << "movXdisplay3 = " << movXdisplay3 << std::endl;
-	std::cout << "movYdisplay3 = " << movYdisplay3 << std::endl;
-	std::cout << "movZdisplay3 = " << movZdisplay3 << std::endl;
-	std::cout << "movXdisplay4 = " << movXdisplay4 << std::endl;
-	std::cout << "movYdisplay4 = " << movYdisplay4 << std::endl;
-	std::cout << "movZdisplay4 = " << movZdisplay4 << std::endl;
-	std::cout << "movXdisplay5 = " << movXdisplay5 << std::endl;
-	std::cout << "movYdisplay5 = " << movYdisplay5 << std::endl;
-	std::cout << "movZdisplay5 = " << movZdisplay5 << std::endl;
-	std::cout << "movXdisplay6 = " << movXdisplay6 << std::endl;
-	std::cout << "movYdisplay6 = " << movYdisplay6 << std::endl;
-	std::cout << "movZdisplay6 = " << movZdisplay6 << std::endl;
-	std::cout << "movXdisplay7 = " << movXdisplay7 << std::endl;
-	std::cout << "movYdisplay7 = " << movYdisplay7 << std::endl;
-	std::cout << "movZdisplay7 = " << movZdisplay7 << std::endl;
-	std::cout << "movXdisplay8 = " << movXdisplay8 << std::endl;
-	std::cout << "movYdisplay8 = " << movYdisplay8 << std::endl;
-	std::cout << "movZdisplay8 = " << movZdisplay8 << std::endl;
-	std::cout << "movXdisplay9 = " << movXdisplay9 << std::endl;
-	std::cout << "movYdisplay9 = " << movYdisplay9 << std::endl;
-	std::cout << "movZdisplay9 = " << movZdisplay9 << std::endl;
-	std::cout << "movXdisplay10 = " << movXdisplay10 << std::endl;
-	std::cout << "movYdisplay10 = " << movYdisplay10 << std::endl;
-	std::cout << "movZdisplay10 = " << movZdisplay10 << std::endl;
-	std::cout << "movXdisplay11 = " << movXdisplay11 << std::endl;
-	std::cout << "movYdisplay11 = " << movYdisplay11 << std::endl;
-	std::cout << "movZdisplay11 = " << movZdisplay11 << std::endl;
-	std::cout << "movXdisplay12 = " << movXdisplay12 << std::endl;
-	std::cout << "movYdisplay12 = " << movYdisplay12 << std::endl;
-	std::cout << "movZdisplay12 = " << movZdisplay12 << std::endl;
-	std::cout << "giroZdisplay1 = " << giroZdisplay << std::endl;	//
-	std::cout << "scaledisplay1 = " << scaledisplay << std::endl;	//
-	std::cout << "movXpccase1 = " << movXpccase1 << std::endl;
-	std::cout << "movYpccase1 = " << movYpccase1 << std::endl;
-	std::cout << "movZpccase1 = " << movZpccase1 << std::endl;
-	std::cout << "movXpccase2 = " << movXpccase2 << std::endl;
-	std::cout << "movYpccase2 = " << movYpccase2 << std::endl;
-	std::cout << "movZpccase2 = " << movZpccase2 << std::endl;
-	std::cout << "movXpccase3 = " << movXpccase3 << std::endl;
-	std::cout << "movYpccase3 = " << movYpccase3 << std::endl;
-	std::cout << "movZpccase3 = " << movZpccase3 << std::endl;
-	std::cout << "movXpccase4 = " << movXpccase4 << std::endl;
-	std::cout << "movYpccase4 = " << movYpccase4 << std::endl;
-	std::cout << "movZpccase4 = " << movZpccase4 << std::endl;
-	std::cout << "movXpccase5 = " << movXpccase5 << std::endl;
-	std::cout << "movYpccase5 = " << movYpccase5 << std::endl;
-	std::cout << "movZpccase5 = " << movZpccase5 << std::endl;
-	std::cout << "movXpccase6 = " << movXpccase6 << std::endl;
-	std::cout << "movYpccase6 = " << movYpccase6 << std::endl;
-	std::cout << "movZpccase6 = " << movZpccase6 << std::endl;
-	std::cout << "movXpccase7 = " << movXpccase7 << std::endl;
-	std::cout << "movYpccase7 = " << movYpccase7 << std::endl;
-	std::cout << "movZpccase7 = " << movZpccase7 << std::endl;
-	std::cout << "movXpccase8 = " << movXpccase8 << std::endl;
-	std::cout << "movYpccase8 = " << movYpccase8 << std::endl;
-	std::cout << "movZpccase8 = " << movZpccase8 << std::endl;
-	std::cout << "movXpccase9 = " << movXpccase9 << std::endl;
-	std::cout << "movYpccase9 = " << movYpccase9 << std::endl;
-	std::cout << "movZpccase9 = " << movZpccase9 << std::endl;
-	std::cout << "movXpccase10 = " << movXpccase10 << std::endl;
-	std::cout << "movYpccase10 = " << movYpccase10 << std::endl;
-	std::cout << "movZpccase10 = " << movZpccase10 << std::endl;
-	std::cout << "movXpccase11 = " << movXpccase11 << std::endl;
-	std::cout << "movYpccase11 = " << movYpccase11 << std::endl;
-	std::cout << "movZpccase11 = " << movZpccase11 << std::endl;
-	std::cout << "movXpccase12 = " << movXpccase12 << std::endl;
-	std::cout << "movYpccase12 = " << movYpccase12 << std::endl;
-	std::cout << "movZpccase12 = " << movZpccase12 << std::endl;
-	std::cout << "giroZpccase1 = " << giroZpccases << std::endl;	//
-	std::cout << "scalepccase1 = " << scalepccases << std::endl;	//
+	std::cout << "Cabeza = " << giroCabeza << std::endl;						//CAMBIO EN EL CODIGO	
 
-
-	//AQUI ME FALTA ALGO || CON ESTO ES LO QUE GUARDA LAS POSICIONES DE LOS KEYFRAMES
 	FrameIndex++;
+
 }
 
 void resetElements(void)
@@ -1176,201 +284,6 @@ void resetElements(void)
 	giroMonito = KeyFrame[0].giroMonito;
 	giroCabeza = KeyFrame[0].giroCabeza;								//	CAMBIO EN EL CODIGO
 	giroBrazoDerecho = KeyFrame[0].giroBrazoDerecho;					//	CAMBIO EN EL CODIGO	
-	girominuto = KeyFrame[0].girominuto;								//	CAMBIO EN EL CODIGO
-	girohora = KeyFrame[0].girohora;								//	CAMBIO EN EL CODIGO	
-	giropokeball = KeyFrame[0].giropokeball;
-	girotapapokeball = KeyFrame[0].girotapapokeball;
-	movXsilla1 = KeyFrame[0].movXsilla1;
-	movYsilla1 = KeyFrame[0].movYsilla1;
-	movZsilla1 = KeyFrame[0].movZsilla1;
-	movXsilla2 = KeyFrame[0].movXsilla2;
-	movYsilla2 = KeyFrame[0].movYsilla2;
-	movZsilla2 = KeyFrame[0].movZsilla2;
-	movXsilla3 = KeyFrame[0].movXsilla3;
-	movYsilla3 = KeyFrame[0].movYsilla3;
-	movZsilla3 = KeyFrame[0].movZsilla3;
-	movXsilla4 = KeyFrame[0].movXsilla4;
-	movYsilla4 = KeyFrame[0].movYsilla4;
-	movZsilla4 = KeyFrame[0].movZsilla4;
-	movXsilla5 = KeyFrame[0].movXsilla5;
-	movYsilla5 = KeyFrame[0].movYsilla5;
-	movZsilla5 = KeyFrame[0].movZsilla5;
-	movXsilla6 = KeyFrame[0].movXsilla6;
-	movYsilla6 = KeyFrame[0].movYsilla6;
-	movZsilla6 = KeyFrame[0].movZsilla6;
-	movXsilla7 = KeyFrame[0].movXsilla7;
-	movYsilla7 = KeyFrame[0].movYsilla7;
-	movZsilla7 = KeyFrame[0].movZsilla7;
-	movXsilla8 = KeyFrame[0].movXsilla8;
-	movYsilla8 = KeyFrame[0].movYsilla8;
-	movZsilla8 = KeyFrame[0].movZsilla8;
-	movXsilla9 = KeyFrame[0].movXsilla9;
-	movYsilla9 = KeyFrame[0].movYsilla9;
-	movZsilla9 = KeyFrame[0].movZsilla9;
-	movXsilla10 = KeyFrame[0].movXsilla10;
-	movYsilla10 = KeyFrame[0].movYsilla10;
-	movZsilla10 = KeyFrame[0].movZsilla10;
-	movXsilla11 = KeyFrame[0].movXsilla11;
-	movYsilla11 = KeyFrame[0].movYsilla11;
-	movZsilla11 = KeyFrame[0].movZsilla11;
-	movXsilla12 = KeyFrame[0].movXsilla12;
-	movYsilla12 = KeyFrame[0].movYsilla12;
-	movZsilla12 = KeyFrame[0].movZsilla12;
-	movXsilla13 = KeyFrame[0].movXsilla13;
-	movYsilla13 = KeyFrame[0].movYsilla13;
-	movZsilla13 = KeyFrame[0].movZsilla13;
-	movXsilla14 = KeyFrame[0].movXsilla14;
-	movYsilla14 = KeyFrame[0].movYsilla14;
-	movZsilla14 = KeyFrame[0].movZsilla14;
-	movXsilla15 = KeyFrame[0].movXsilla15;
-	movYsilla15 = KeyFrame[0].movYsilla15;
-	movZsilla15 = KeyFrame[0].movZsilla15;
-	movXsilla16 = KeyFrame[0].movXsilla16;
-	movYsilla16 = KeyFrame[0].movYsilla16;
-	movZsilla16 = KeyFrame[0].movZsilla16;
-	movXsilla17 = KeyFrame[0].movXsilla17;
-	movYsilla17 = KeyFrame[0].movYsilla17;
-	movZsilla17 = KeyFrame[0].movZsilla17;
-	movXsilla18 = KeyFrame[0].movXsilla18;
-	movYsilla18 = KeyFrame[0].movYsilla18;
-	movZsilla18 = KeyFrame[0].movZsilla18;
-	movXsilla19 = KeyFrame[0].movXsilla19;
-	movYsilla19 = KeyFrame[0].movYsilla19;
-	movZsilla19 = KeyFrame[0].movZsilla19;
-	movXsilla20 = KeyFrame[0].movXsilla20;
-	movYsilla20 = KeyFrame[0].movYsilla20;
-	movZsilla20 = KeyFrame[0].movZsilla20;
-	movXsilla21 = KeyFrame[0].movXsilla21;
-	movYsilla21 = KeyFrame[0].movYsilla21;
-	movZsilla21 = KeyFrame[0].movZsilla21;
-	movXsilla22 = KeyFrame[0].movXsilla22;
-	movYsilla22 = KeyFrame[0].movYsilla22;
-	movZsilla22 = KeyFrame[0].movZsilla22;
-	movXsilla23 = KeyFrame[0].movXsilla23;
-	movYsilla23 = KeyFrame[0].movYsilla23;
-	movZsilla23 = KeyFrame[0].movZsilla23;
-	movXsilla24 = KeyFrame[0].movXsilla24;
-	movYsilla24 = KeyFrame[0].movYsilla24;
-	movZsilla24 = KeyFrame[0].movZsilla24;
-	giroZsillas = KeyFrame[0].giroZsillas;
-	scalesillas = KeyFrame[0].scalesillas;
-	movXmesa1 = KeyFrame[0].movXmesa1;
-	movYmesa1 = KeyFrame[0].movYmesa1;
-	movZmesa1 = KeyFrame[0].movZmesa1;
-	movXmesa2 = KeyFrame[0].movXmesa2;
-	movYmesa2 = KeyFrame[0].movYmesa2;
-	movZmesa2 = KeyFrame[0].movZmesa2;
-	movXmesa3 = KeyFrame[0].movXmesa3;
-	movYmesa3 = KeyFrame[0].movYmesa3;
-	movZmesa3 = KeyFrame[0].movZmesa3;
-	movXmesa4 = KeyFrame[0].movXmesa4;
-	movYmesa4 = KeyFrame[0].movYmesa4;
-	movZmesa4 = KeyFrame[0].movZmesa4;
-	movXmesa5 = KeyFrame[0].movXmesa5;
-	movYmesa5 = KeyFrame[0].movYmesa5;
-	movZmesa5 = KeyFrame[0].movZmesa5;
-	movXmesa6 = KeyFrame[0].movXmesa6;
-	movYmesa6 = KeyFrame[0].movYmesa6;
-	movZmesa6 = KeyFrame[0].movZmesa6;
-	movXmesa7 = KeyFrame[0].movXmesa7;
-	movYmesa7 = KeyFrame[0].movYmesa7;
-	movZmesa7 = KeyFrame[0].movZmesa7;
-	movXmesa8 = KeyFrame[0].movXmesa8;
-	movYmesa8 = KeyFrame[0].movYmesa8;
-	movZmesa8 = KeyFrame[0].movZmesa8;
-	movXmesa9 = KeyFrame[0].movXmesa9;
-	movYmesa9 = KeyFrame[0].movYmesa9;
-	movZmesa9 = KeyFrame[0].movZmesa9;
-	movXmesa10 = KeyFrame[0].movXmesa10;
-	movYmesa10 = KeyFrame[0].movYmesa10;
-	movZmesa10 = KeyFrame[0].movZmesa10;
-	movXmesa11 = KeyFrame[0].movXmesa11;
-	movYmesa11 = KeyFrame[0].movYmesa11;
-	movZmesa11 = KeyFrame[0].movZmesa11;
-	movXmesa12 = KeyFrame[0].movXmesa12;
-	movYmesa12 = KeyFrame[0].movYmesa12;
-	movZmesa12 = KeyFrame[0].movZmesa12;
-	giroZmesas = KeyFrame[0].giroZmesas;
-	scaleXmesas = KeyFrame[0].scaleXmesas;
-	scaleYmesas = KeyFrame[0].scaleYmesas;
-	scaleZmesas = KeyFrame[0].scaleZmesas;
-	movXdisplay1 = KeyFrame[0].movXdisplay1;
-	movYdisplay1 = KeyFrame[0].movYdisplay1;
-	movZdisplay1 = KeyFrame[0].movZdisplay1;
-	movXdisplay2 = KeyFrame[0].movXdisplay2;
-	movYdisplay2 = KeyFrame[0].movYdisplay2;
-	movZdisplay2 = KeyFrame[0].movZdisplay2;
-	movXdisplay3 = KeyFrame[0].movXdisplay3;
-	movYdisplay3 = KeyFrame[0].movYdisplay3;
-	movZdisplay3 = KeyFrame[0].movZdisplay3;
-	movXdisplay4 = KeyFrame[0].movXdisplay4;
-	movYdisplay4 = KeyFrame[0].movYdisplay4;
-	movZdisplay4 = KeyFrame[0].movZdisplay4;
-	movXdisplay5 = KeyFrame[0].movXdisplay5;
-	movYdisplay5 = KeyFrame[0].movYdisplay5;
-	movZdisplay5 = KeyFrame[0].movZdisplay5;
-	movXdisplay6 = KeyFrame[0].movXdisplay6;
-	movYdisplay6 = KeyFrame[0].movYdisplay6;
-	movZdisplay6 = KeyFrame[0].movZdisplay6;
-	movXdisplay7 = KeyFrame[0].movXdisplay7;
-	movYdisplay7 = KeyFrame[0].movYdisplay7;
-	movZdisplay7 = KeyFrame[0].movZdisplay7;
-	movXdisplay8 = KeyFrame[0].movXdisplay8;
-	movYdisplay8 = KeyFrame[0].movYdisplay8;
-	movZdisplay8 = KeyFrame[0].movZdisplay8;
-	movXdisplay9 = KeyFrame[0].movXdisplay9;
-	movYdisplay9 = KeyFrame[0].movYdisplay9;
-	movZdisplay9 = KeyFrame[0].movZdisplay9;
-	movXdisplay10 = KeyFrame[0].movXdisplay10;
-	movYdisplay10 = KeyFrame[0].movYdisplay10;
-	movZdisplay10 = KeyFrame[0].movZdisplay10;
-	movXdisplay11 = KeyFrame[0].movXdisplay11;
-	movYdisplay11 = KeyFrame[0].movYdisplay11;
-	movZdisplay11 = KeyFrame[0].movZdisplay11;
-	movXdisplay12 = KeyFrame[0].movXdisplay12;
-	movYdisplay12 = KeyFrame[0].movYdisplay12;
-	movZdisplay12 = KeyFrame[0].movZdisplay12;
-	giroZdisplay = KeyFrame[0].giroZdisplay;
-	scaledisplay = KeyFrame[0].scaledisplay;
-	movXpccase1 = KeyFrame[0].movXpccase1;
-	movYpccase1 = KeyFrame[0].movYpccase1;
-	movZpccase1 = KeyFrame[0].movZpccase1;
-	movXpccase2 = KeyFrame[0].movXpccase2;
-	movYpccase2 = KeyFrame[0].movYpccase2;
-	movZpccase2 = KeyFrame[0].movZpccase2;
-	movXpccase3 = KeyFrame[0].movXpccase3;
-	movYpccase3 = KeyFrame[0].movYpccase3;
-	movZpccase3 = KeyFrame[0].movZpccase3;
-	movXpccase4 = KeyFrame[0].movXpccase4;
-	movYpccase4 = KeyFrame[0].movYpccase4;
-	movZpccase4 = KeyFrame[0].movZpccase4;
-	movXpccase5 = KeyFrame[0].movXpccase5;
-	movYpccase5 = KeyFrame[0].movYpccase5;
-	movZpccase5 = KeyFrame[0].movZpccase5;
-	movXpccase6 = KeyFrame[0].movXpccase6;
-	movYpccase6 = KeyFrame[0].movYpccase6;
-	movZpccase6 = KeyFrame[0].movZpccase6;
-	movXpccase7 = KeyFrame[0].movXpccase7;
-	movYpccase7 = KeyFrame[0].movYpccase7;
-	movZpccase7 = KeyFrame[0].movZpccase7;
-	movXpccase8 = KeyFrame[0].movXpccase8;
-	movYpccase8 = KeyFrame[0].movYpccase8;
-	movZpccase8 = KeyFrame[0].movZpccase8;
-	movXpccase9 = KeyFrame[0].movXpccase9;
-	movYpccase9 = KeyFrame[0].movYpccase9;
-	movZpccase9 = KeyFrame[0].movZpccase9;
-	movXpccase10 = KeyFrame[0].movXpccase10;
-	movYpccase10 = KeyFrame[0].movYpccase10;
-	movZpccase10 = KeyFrame[0].movZpccase10;
-	movXpccase11 = KeyFrame[0].movXpccase11;
-	movYpccase11 = KeyFrame[0].movYpccase11;
-	movZpccase11 = KeyFrame[0].movZpccase11;
-	movXpccase12 = KeyFrame[0].movXpccase12;
-	movYpccase12 = KeyFrame[0].movYpccase12;
-	movZpccase12 = KeyFrame[0].movZpccase12;
-	giroZpccases = KeyFrame[0].giroZpccases;
-	scalepccases = KeyFrame[0].scalepccases;
-
 }
 
 void interpolation(void)
@@ -1383,240 +296,39 @@ void interpolation(void)
 	giroMonitoInc = (KeyFrame[playIndex + 1].giroMonito - KeyFrame[playIndex].giroMonito) / i_max_steps;
 	giroCabezaInc = (KeyFrame[playIndex + 1].giroCabeza - KeyFrame[playIndex].giroCabeza) / i_max_steps;						//	CAMBIO EN EL CODIGO
 	giroBrazoDerechoInc = (KeyFrame[playIndex + 1].giroBrazoDerecho - KeyFrame[playIndex].giroBrazoDerecho) / i_max_steps;		//	CAMBIO EN EL CODIGO
-	girominutoInc = (KeyFrame[playIndex + 1].girominuto - KeyFrame[playIndex].girominuto) / i_max_steps;						//	CAMBIO EN EL CODIGO
-	girohoraInc = (KeyFrame[playIndex + 1].girohora - KeyFrame[playIndex].girohora) / i_max_steps;						//	CAMBIO EN EL CODIGO	
 
-	giropokeballInc = (KeyFrame[playIndex + 1].giropokeball - KeyFrame[playIndex].giropokeball) / i_max_steps;
-	girotapapokeballInc = (KeyFrame[playIndex + 1].girotapapokeball - KeyFrame[playIndex].girotapapokeball) / i_max_steps;
-
-	movXsilla1Inc = (KeyFrame[playIndex + 1].movXsilla1 - KeyFrame[playIndex].movXsilla1) / i_max_steps;
-	movYsilla1Inc = (KeyFrame[playIndex + 1].movYsilla1 - KeyFrame[playIndex].movYsilla1) / i_max_steps;
-	movZsilla1Inc = (KeyFrame[playIndex + 1].movZsilla1 - KeyFrame[playIndex].movZsilla1) / i_max_steps;
-	movXsilla2Inc = (KeyFrame[playIndex + 1].movXsilla2 - KeyFrame[playIndex].movXsilla2) / i_max_steps;
-	movYsilla2Inc = (KeyFrame[playIndex + 1].movYsilla2 - KeyFrame[playIndex].movYsilla2) / i_max_steps;
-	movZsilla2Inc = (KeyFrame[playIndex + 1].movZsilla2 - KeyFrame[playIndex].movZsilla2) / i_max_steps;
-	movXsilla3Inc = (KeyFrame[playIndex + 1].movXsilla3 - KeyFrame[playIndex].movXsilla3) / i_max_steps;
-	movYsilla3Inc = (KeyFrame[playIndex + 1].movYsilla3 - KeyFrame[playIndex].movYsilla3) / i_max_steps;
-	movZsilla3Inc = (KeyFrame[playIndex + 1].movZsilla3 - KeyFrame[playIndex].movZsilla3) / i_max_steps;
-	movXsilla4Inc = (KeyFrame[playIndex + 1].movXsilla4 - KeyFrame[playIndex].movXsilla4) / i_max_steps;
-	movYsilla4Inc = (KeyFrame[playIndex + 1].movYsilla4 - KeyFrame[playIndex].movYsilla4) / i_max_steps;
-	movZsilla4Inc = (KeyFrame[playIndex + 1].movZsilla4 - KeyFrame[playIndex].movZsilla4) / i_max_steps;
-	movXsilla5Inc = (KeyFrame[playIndex + 1].movXsilla5 - KeyFrame[playIndex].movXsilla5) / i_max_steps;
-	movYsilla5Inc = (KeyFrame[playIndex + 1].movYsilla5 - KeyFrame[playIndex].movYsilla5) / i_max_steps;
-	movZsilla5Inc = (KeyFrame[playIndex + 1].movZsilla5 - KeyFrame[playIndex].movZsilla5) / i_max_steps;
-	movXsilla6Inc = (KeyFrame[playIndex + 1].movXsilla6 - KeyFrame[playIndex].movXsilla6) / i_max_steps;
-	movYsilla6Inc = (KeyFrame[playIndex + 1].movYsilla6 - KeyFrame[playIndex].movYsilla6) / i_max_steps;
-	movZsilla6Inc = (KeyFrame[playIndex + 1].movZsilla6 - KeyFrame[playIndex].movZsilla6) / i_max_steps;
-	movXsilla7Inc = (KeyFrame[playIndex + 1].movXsilla7 - KeyFrame[playIndex].movXsilla7) / i_max_steps;
-	movYsilla7Inc = (KeyFrame[playIndex + 1].movYsilla7 - KeyFrame[playIndex].movYsilla7) / i_max_steps;
-	movZsilla7Inc = (KeyFrame[playIndex + 1].movZsilla7 - KeyFrame[playIndex].movZsilla7) / i_max_steps;
-	movXsilla8Inc = (KeyFrame[playIndex + 1].movXsilla8 - KeyFrame[playIndex].movXsilla8) / i_max_steps;
-	movYsilla8Inc = (KeyFrame[playIndex + 1].movYsilla8 - KeyFrame[playIndex].movYsilla8) / i_max_steps;
-	movZsilla8Inc = (KeyFrame[playIndex + 1].movZsilla8 - KeyFrame[playIndex].movZsilla8) / i_max_steps;
-	movXsilla9Inc = (KeyFrame[playIndex + 1].movXsilla9 - KeyFrame[playIndex].movXsilla9) / i_max_steps;
-	movYsilla9Inc = (KeyFrame[playIndex + 1].movYsilla9 - KeyFrame[playIndex].movYsilla9) / i_max_steps;
-	movZsilla9Inc = (KeyFrame[playIndex + 1].movZsilla9 - KeyFrame[playIndex].movZsilla9) / i_max_steps;
-	movXsilla10Inc = (KeyFrame[playIndex + 1].movXsilla10 - KeyFrame[playIndex].movXsilla10) / i_max_steps;
-	movYsilla10Inc = (KeyFrame[playIndex + 1].movYsilla10 - KeyFrame[playIndex].movYsilla10) / i_max_steps;
-	movZsilla10Inc = (KeyFrame[playIndex + 1].movZsilla10 - KeyFrame[playIndex].movZsilla10) / i_max_steps;
-	movXsilla11Inc = (KeyFrame[playIndex + 1].movXsilla11 - KeyFrame[playIndex].movXsilla11) / i_max_steps;
-	movYsilla11Inc = (KeyFrame[playIndex + 1].movYsilla11 - KeyFrame[playIndex].movYsilla11) / i_max_steps;
-	movZsilla11Inc = (KeyFrame[playIndex + 1].movZsilla11 - KeyFrame[playIndex].movZsilla11) / i_max_steps;
-	movXsilla12Inc = (KeyFrame[playIndex + 1].movXsilla12 - KeyFrame[playIndex].movXsilla12) / i_max_steps;
-	movYsilla12Inc = (KeyFrame[playIndex + 1].movYsilla12 - KeyFrame[playIndex].movYsilla12) / i_max_steps;
-	movZsilla12Inc = (KeyFrame[playIndex + 1].movZsilla12 - KeyFrame[playIndex].movZsilla12) / i_max_steps;
-	movXsilla13Inc = (KeyFrame[playIndex + 1].movXsilla13 - KeyFrame[playIndex].movXsilla13) / i_max_steps;
-	movYsilla13Inc = (KeyFrame[playIndex + 1].movYsilla13 - KeyFrame[playIndex].movYsilla13) / i_max_steps;
-	movZsilla13Inc = (KeyFrame[playIndex + 1].movZsilla13 - KeyFrame[playIndex].movZsilla13) / i_max_steps;
-	movXsilla14Inc = (KeyFrame[playIndex + 1].movXsilla14 - KeyFrame[playIndex].movXsilla14) / i_max_steps;
-	movYsilla14Inc = (KeyFrame[playIndex + 1].movYsilla14 - KeyFrame[playIndex].movYsilla14) / i_max_steps;
-	movZsilla14Inc = (KeyFrame[playIndex + 1].movZsilla14 - KeyFrame[playIndex].movZsilla14) / i_max_steps;
-	movXsilla15Inc = (KeyFrame[playIndex + 1].movXsilla15 - KeyFrame[playIndex].movXsilla15) / i_max_steps;
-	movYsilla15Inc = (KeyFrame[playIndex + 1].movYsilla15 - KeyFrame[playIndex].movYsilla15) / i_max_steps;
-	movZsilla15Inc = (KeyFrame[playIndex + 1].movZsilla15 - KeyFrame[playIndex].movZsilla15) / i_max_steps;
-	movXsilla16Inc = (KeyFrame[playIndex + 1].movXsilla16 - KeyFrame[playIndex].movXsilla16) / i_max_steps;
-	movYsilla16Inc = (KeyFrame[playIndex + 1].movYsilla16 - KeyFrame[playIndex].movYsilla16) / i_max_steps;
-	movZsilla16Inc = (KeyFrame[playIndex + 1].movZsilla16 - KeyFrame[playIndex].movZsilla16) / i_max_steps;
-	movXsilla17Inc = (KeyFrame[playIndex + 1].movXsilla17 - KeyFrame[playIndex].movXsilla17) / i_max_steps;
-	movYsilla17Inc = (KeyFrame[playIndex + 1].movYsilla17 - KeyFrame[playIndex].movYsilla17) / i_max_steps;
-	movZsilla17Inc = (KeyFrame[playIndex + 1].movZsilla17 - KeyFrame[playIndex].movZsilla17) / i_max_steps;
-	movXsilla18Inc = (KeyFrame[playIndex + 1].movXsilla18 - KeyFrame[playIndex].movXsilla18) / i_max_steps;
-	movYsilla18Inc = (KeyFrame[playIndex + 1].movYsilla18 - KeyFrame[playIndex].movYsilla18) / i_max_steps;
-	movZsilla18Inc = (KeyFrame[playIndex + 1].movZsilla18 - KeyFrame[playIndex].movZsilla18) / i_max_steps;
-	movXsilla19Inc = (KeyFrame[playIndex + 1].movXsilla19 - KeyFrame[playIndex].movXsilla19) / i_max_steps;
-	movYsilla19Inc = (KeyFrame[playIndex + 1].movYsilla19 - KeyFrame[playIndex].movYsilla19) / i_max_steps;
-	movZsilla19Inc = (KeyFrame[playIndex + 1].movZsilla19 - KeyFrame[playIndex].movZsilla19) / i_max_steps;
-	movXsilla20Inc = (KeyFrame[playIndex + 1].movXsilla20 - KeyFrame[playIndex].movXsilla20) / i_max_steps;
-	movYsilla20Inc = (KeyFrame[playIndex + 1].movYsilla20 - KeyFrame[playIndex].movYsilla20) / i_max_steps;
-	movZsilla20Inc = (KeyFrame[playIndex + 1].movZsilla20 - KeyFrame[playIndex].movZsilla20) / i_max_steps;
-	movXsilla21Inc = (KeyFrame[playIndex + 1].movXsilla21 - KeyFrame[playIndex].movXsilla21) / i_max_steps;
-	movYsilla21Inc = (KeyFrame[playIndex + 1].movYsilla21 - KeyFrame[playIndex].movYsilla21) / i_max_steps;
-	movZsilla21Inc = (KeyFrame[playIndex + 1].movZsilla21 - KeyFrame[playIndex].movZsilla21) / i_max_steps;
-	movXsilla22Inc = (KeyFrame[playIndex + 1].movXsilla22 - KeyFrame[playIndex].movXsilla22) / i_max_steps;
-	movYsilla22Inc = (KeyFrame[playIndex + 1].movYsilla22 - KeyFrame[playIndex].movYsilla22) / i_max_steps;
-	movZsilla22Inc = (KeyFrame[playIndex + 1].movZsilla22 - KeyFrame[playIndex].movZsilla22) / i_max_steps;
-	movXsilla23Inc = (KeyFrame[playIndex + 1].movXsilla23 - KeyFrame[playIndex].movXsilla23) / i_max_steps;
-	movYsilla23Inc = (KeyFrame[playIndex + 1].movYsilla23 - KeyFrame[playIndex].movYsilla23) / i_max_steps;
-	movZsilla23Inc = (KeyFrame[playIndex + 1].movZsilla23 - KeyFrame[playIndex].movZsilla23) / i_max_steps;
-	movXsilla24Inc = (KeyFrame[playIndex + 1].movXsilla24 - KeyFrame[playIndex].movXsilla24) / i_max_steps;
-	movYsilla24Inc = (KeyFrame[playIndex + 1].movYsilla24 - KeyFrame[playIndex].movYsilla24) / i_max_steps;
-	movZsilla24Inc = (KeyFrame[playIndex + 1].movZsilla24 - KeyFrame[playIndex].movZsilla24) / i_max_steps;
-	giroZsillasInc = (KeyFrame[playIndex + 1].giroZsillas - KeyFrame[playIndex].giroZsillas) / i_max_steps;
-	scalesillasInc = (KeyFrame[playIndex + 1].scalesillas - KeyFrame[playIndex].scalesillas) / i_max_steps;
-	movXmesa1Inc = (KeyFrame[playIndex + 1].movXmesa1 - KeyFrame[playIndex].movXmesa1) / i_max_steps;
-	movYmesa1Inc = (KeyFrame[playIndex + 1].movYmesa1 - KeyFrame[playIndex].movYmesa1) / i_max_steps;
-	movZmesa1Inc = (KeyFrame[playIndex + 1].movZmesa1 - KeyFrame[playIndex].movZmesa1) / i_max_steps;
-	movXmesa2Inc = (KeyFrame[playIndex + 1].movXmesa2 - KeyFrame[playIndex].movXmesa2) / i_max_steps;
-	movYmesa2Inc = (KeyFrame[playIndex + 1].movYmesa2 - KeyFrame[playIndex].movYmesa2) / i_max_steps;
-	movZmesa2Inc = (KeyFrame[playIndex + 1].movZmesa2 - KeyFrame[playIndex].movZmesa2) / i_max_steps;
-	movXmesa3Inc = (KeyFrame[playIndex + 1].movXmesa3 - KeyFrame[playIndex].movXmesa3) / i_max_steps;
-	movYmesa3Inc = (KeyFrame[playIndex + 1].movYmesa3 - KeyFrame[playIndex].movYmesa3) / i_max_steps;
-	movZmesa3Inc = (KeyFrame[playIndex + 1].movZmesa3 - KeyFrame[playIndex].movZmesa3) / i_max_steps;
-	movXmesa4Inc = (KeyFrame[playIndex + 1].movXmesa4 - KeyFrame[playIndex].movXmesa4) / i_max_steps;
-	movYmesa4Inc = (KeyFrame[playIndex + 1].movYmesa4 - KeyFrame[playIndex].movYmesa4) / i_max_steps;
-	movZmesa4Inc = (KeyFrame[playIndex + 1].movZmesa4 - KeyFrame[playIndex].movZmesa4) / i_max_steps;
-	movXmesa5Inc = (KeyFrame[playIndex + 1].movXmesa5 - KeyFrame[playIndex].movXmesa5) / i_max_steps;
-	movYmesa5Inc = (KeyFrame[playIndex + 1].movYmesa5 - KeyFrame[playIndex].movYmesa5) / i_max_steps;
-	movZmesa5Inc = (KeyFrame[playIndex + 1].movZmesa5 - KeyFrame[playIndex].movZmesa5) / i_max_steps;
-	movXmesa6Inc = (KeyFrame[playIndex + 1].movXmesa6 - KeyFrame[playIndex].movXmesa6) / i_max_steps;
-	movYmesa6Inc = (KeyFrame[playIndex + 1].movYmesa6 - KeyFrame[playIndex].movYmesa6) / i_max_steps;
-	movZmesa6Inc = (KeyFrame[playIndex + 1].movZmesa6 - KeyFrame[playIndex].movZmesa6) / i_max_steps;
-	movXmesa7Inc = (KeyFrame[playIndex + 1].movXmesa7 - KeyFrame[playIndex].movXmesa7) / i_max_steps;
-	movYmesa7Inc = (KeyFrame[playIndex + 1].movYmesa7 - KeyFrame[playIndex].movYmesa7) / i_max_steps;
-	movZmesa7Inc = (KeyFrame[playIndex + 1].movZmesa7 - KeyFrame[playIndex].movZmesa7) / i_max_steps;
-	movXmesa8Inc = (KeyFrame[playIndex + 1].movXmesa8 - KeyFrame[playIndex].movXmesa8) / i_max_steps;
-	movYmesa8Inc = (KeyFrame[playIndex + 1].movYmesa8 - KeyFrame[playIndex].movYmesa8) / i_max_steps;
-	movZmesa8Inc = (KeyFrame[playIndex + 1].movZmesa8 - KeyFrame[playIndex].movZmesa8) / i_max_steps;
-	movXmesa9Inc = (KeyFrame[playIndex + 1].movXmesa9 - KeyFrame[playIndex].movXmesa9) / i_max_steps;
-	movYmesa9Inc = (KeyFrame[playIndex + 1].movYmesa9 - KeyFrame[playIndex].movYmesa9) / i_max_steps;
-	movZmesa9Inc = (KeyFrame[playIndex + 1].movZmesa9 - KeyFrame[playIndex].movZmesa9) / i_max_steps;
-	movXmesa10Inc = (KeyFrame[playIndex + 1].movXmesa10 - KeyFrame[playIndex].movXmesa10) / i_max_steps;
-	movYmesa10Inc = (KeyFrame[playIndex + 1].movYmesa10 - KeyFrame[playIndex].movYmesa10) / i_max_steps;
-	movZmesa10Inc = (KeyFrame[playIndex + 1].movZmesa10 - KeyFrame[playIndex].movZmesa10) / i_max_steps;
-	movXmesa11Inc = (KeyFrame[playIndex + 1].movXmesa11 - KeyFrame[playIndex].movXmesa11) / i_max_steps;
-	movYmesa11Inc = (KeyFrame[playIndex + 1].movYmesa11 - KeyFrame[playIndex].movYmesa11) / i_max_steps;
-	movZmesa11Inc = (KeyFrame[playIndex + 1].movZmesa11 - KeyFrame[playIndex].movZmesa11) / i_max_steps;
-	movXmesa12Inc = (KeyFrame[playIndex + 1].movXmesa12 - KeyFrame[playIndex].movXmesa12) / i_max_steps;
-	movYmesa12Inc = (KeyFrame[playIndex + 1].movYmesa12 - KeyFrame[playIndex].movYmesa12) / i_max_steps;
-	movZmesa12Inc = (KeyFrame[playIndex + 1].movZmesa12 - KeyFrame[playIndex].movZmesa12) / i_max_steps;
-	giroZmesasInc = (KeyFrame[playIndex + 1].giroZmesas - KeyFrame[playIndex].giroZmesas) / i_max_steps;
-	scaleXmesasInc = (KeyFrame[playIndex + 1].scaleXmesas - KeyFrame[playIndex].scaleXmesas) / i_max_steps;
-	scaleYmesasInc = (KeyFrame[playIndex + 1].scaleYmesas - KeyFrame[playIndex].scaleYmesas) / i_max_steps;
-	scaleZmesasInc = (KeyFrame[playIndex + 1].scaleZmesas - KeyFrame[playIndex].scaleZmesas) / i_max_steps;
-	movXdisplay1Inc = (KeyFrame[playIndex + 1].movXdisplay1 - KeyFrame[playIndex].movXdisplay1) / i_max_steps;
-	movYdisplay1Inc = (KeyFrame[playIndex + 1].movYdisplay1 - KeyFrame[playIndex].movYdisplay1) / i_max_steps;
-	movZdisplay1Inc = (KeyFrame[playIndex + 1].movZdisplay1 - KeyFrame[playIndex].movZdisplay1) / i_max_steps;
-	movXdisplay2Inc = (KeyFrame[playIndex + 1].movXdisplay2 - KeyFrame[playIndex].movXdisplay2) / i_max_steps;
-	movYdisplay2Inc = (KeyFrame[playIndex + 1].movYdisplay2 - KeyFrame[playIndex].movYdisplay2) / i_max_steps;
-	movZdisplay2Inc = (KeyFrame[playIndex + 1].movZdisplay2 - KeyFrame[playIndex].movZdisplay2) / i_max_steps;
-	movXdisplay3Inc = (KeyFrame[playIndex + 1].movXdisplay3 - KeyFrame[playIndex].movXdisplay3) / i_max_steps;
-	movYdisplay3Inc = (KeyFrame[playIndex + 1].movYdisplay3 - KeyFrame[playIndex].movYdisplay3) / i_max_steps;
-	movZdisplay3Inc = (KeyFrame[playIndex + 1].movZdisplay3 - KeyFrame[playIndex].movZdisplay3) / i_max_steps;
-	movXdisplay4Inc = (KeyFrame[playIndex + 1].movXdisplay4 - KeyFrame[playIndex].movXdisplay4) / i_max_steps;
-	movYdisplay4Inc = (KeyFrame[playIndex + 1].movYdisplay4 - KeyFrame[playIndex].movYdisplay4) / i_max_steps;
-	movZdisplay4Inc = (KeyFrame[playIndex + 1].movZdisplay4 - KeyFrame[playIndex].movZdisplay4) / i_max_steps;
-	movXdisplay5Inc = (KeyFrame[playIndex + 1].movXdisplay5 - KeyFrame[playIndex].movXdisplay5) / i_max_steps;
-	movYdisplay5Inc = (KeyFrame[playIndex + 1].movYdisplay5 - KeyFrame[playIndex].movYdisplay5) / i_max_steps;
-	movZdisplay5Inc = (KeyFrame[playIndex + 1].movZdisplay5 - KeyFrame[playIndex].movZdisplay5) / i_max_steps;
-	movXdisplay6Inc = (KeyFrame[playIndex + 1].movXdisplay6 - KeyFrame[playIndex].movXdisplay6) / i_max_steps;
-	movYdisplay6Inc = (KeyFrame[playIndex + 1].movYdisplay6 - KeyFrame[playIndex].movYdisplay6) / i_max_steps;
-	movZdisplay6Inc = (KeyFrame[playIndex + 1].movZdisplay6 - KeyFrame[playIndex].movZdisplay6) / i_max_steps;
-	movXdisplay7Inc = (KeyFrame[playIndex + 1].movXdisplay7 - KeyFrame[playIndex].movXdisplay7) / i_max_steps;
-	movYdisplay7Inc = (KeyFrame[playIndex + 1].movYdisplay7 - KeyFrame[playIndex].movYdisplay7) / i_max_steps;
-	movZdisplay7Inc = (KeyFrame[playIndex + 1].movZdisplay7 - KeyFrame[playIndex].movZdisplay7) / i_max_steps;
-	movXdisplay8Inc = (KeyFrame[playIndex + 1].movXdisplay8 - KeyFrame[playIndex].movXdisplay8) / i_max_steps;
-	movYdisplay8Inc = (KeyFrame[playIndex + 1].movYdisplay8 - KeyFrame[playIndex].movYdisplay8) / i_max_steps;
-	movZdisplay8Inc = (KeyFrame[playIndex + 1].movZdisplay8 - KeyFrame[playIndex].movZdisplay8) / i_max_steps;
-	movXdisplay9Inc = (KeyFrame[playIndex + 1].movXdisplay9 - KeyFrame[playIndex].movXdisplay9) / i_max_steps;
-	movYdisplay9Inc = (KeyFrame[playIndex + 1].movYdisplay9 - KeyFrame[playIndex].movYdisplay9) / i_max_steps;
-	movZdisplay9Inc = (KeyFrame[playIndex + 1].movZdisplay9 - KeyFrame[playIndex].movZdisplay9) / i_max_steps;
-	movXdisplay10Inc = (KeyFrame[playIndex + 1].movXdisplay10 - KeyFrame[playIndex].movXdisplay10) / i_max_steps;
-	movYdisplay10Inc = (KeyFrame[playIndex + 1].movYdisplay10 - KeyFrame[playIndex].movYdisplay10) / i_max_steps;
-	movZdisplay10Inc = (KeyFrame[playIndex + 1].movZdisplay10 - KeyFrame[playIndex].movZdisplay10) / i_max_steps;
-	movXdisplay11Inc = (KeyFrame[playIndex + 1].movXdisplay11 - KeyFrame[playIndex].movXdisplay11) / i_max_steps;
-	movYdisplay11Inc = (KeyFrame[playIndex + 1].movYdisplay11 - KeyFrame[playIndex].movYdisplay11) / i_max_steps;
-	movZdisplay11Inc = (KeyFrame[playIndex + 1].movZdisplay11 - KeyFrame[playIndex].movZdisplay11) / i_max_steps;
-	movXdisplay12Inc = (KeyFrame[playIndex + 1].movXdisplay12 - KeyFrame[playIndex].movXdisplay12) / i_max_steps;
-	movYdisplay12Inc = (KeyFrame[playIndex + 1].movYdisplay12 - KeyFrame[playIndex].movYdisplay12) / i_max_steps;
-	movZdisplay12Inc = (KeyFrame[playIndex + 1].movZdisplay12 - KeyFrame[playIndex].movZdisplay12) / i_max_steps;
-	giroZdisplayInc = (KeyFrame[playIndex + 1].giroZdisplay - KeyFrame[playIndex].giroZdisplay) / i_max_steps;
-	scaledisplayInc = (KeyFrame[playIndex + 1].scaledisplay - KeyFrame[playIndex].scaledisplay) / i_max_steps;
-	movXpccase1Inc = (KeyFrame[playIndex + 1].movXpccase1 - KeyFrame[playIndex].movXpccase1) / i_max_steps;
-	movYpccase1Inc = (KeyFrame[playIndex + 1].movYpccase1 - KeyFrame[playIndex].movYpccase1) / i_max_steps;
-	movZpccase1Inc = (KeyFrame[playIndex + 1].movZpccase1 - KeyFrame[playIndex].movZpccase1) / i_max_steps;
-	movXpccase2Inc = (KeyFrame[playIndex + 1].movXpccase2 - KeyFrame[playIndex].movXpccase2) / i_max_steps;
-	movYpccase2Inc = (KeyFrame[playIndex + 1].movYpccase2 - KeyFrame[playIndex].movYpccase2) / i_max_steps;
-	movZpccase2Inc = (KeyFrame[playIndex + 1].movZpccase2 - KeyFrame[playIndex].movZpccase2) / i_max_steps;
-	movXpccase3Inc = (KeyFrame[playIndex + 1].movXpccase3 - KeyFrame[playIndex].movXpccase3) / i_max_steps;
-	movYpccase3Inc = (KeyFrame[playIndex + 1].movYpccase3 - KeyFrame[playIndex].movYpccase3) / i_max_steps;
-	movZpccase3Inc = (KeyFrame[playIndex + 1].movZpccase3 - KeyFrame[playIndex].movZpccase3) / i_max_steps;
-	movXpccase4Inc = (KeyFrame[playIndex + 1].movXpccase4 - KeyFrame[playIndex].movXpccase4) / i_max_steps;
-	movYpccase4Inc = (KeyFrame[playIndex + 1].movYpccase4 - KeyFrame[playIndex].movYpccase4) / i_max_steps;
-	movZpccase4Inc = (KeyFrame[playIndex + 1].movZpccase4 - KeyFrame[playIndex].movZpccase4) / i_max_steps;
-	movXpccase5Inc = (KeyFrame[playIndex + 1].movXpccase5 - KeyFrame[playIndex].movXpccase5) / i_max_steps;
-	movYpccase5Inc = (KeyFrame[playIndex + 1].movYpccase5 - KeyFrame[playIndex].movYpccase5) / i_max_steps;
-	movZpccase5Inc = (KeyFrame[playIndex + 1].movZpccase5 - KeyFrame[playIndex].movZpccase5) / i_max_steps;
-	movXpccase6Inc = (KeyFrame[playIndex + 1].movXpccase6 - KeyFrame[playIndex].movXpccase6) / i_max_steps;
-	movYpccase6Inc = (KeyFrame[playIndex + 1].movYpccase6 - KeyFrame[playIndex].movYpccase6) / i_max_steps;
-	movZpccase6Inc = (KeyFrame[playIndex + 1].movZpccase6 - KeyFrame[playIndex].movZpccase6) / i_max_steps;
-	movXpccase7Inc = (KeyFrame[playIndex + 1].movXpccase7 - KeyFrame[playIndex].movXpccase7) / i_max_steps;
-	movYpccase7Inc = (KeyFrame[playIndex + 1].movYpccase7 - KeyFrame[playIndex].movYpccase7) / i_max_steps;
-	movZpccase7Inc = (KeyFrame[playIndex + 1].movZpccase7 - KeyFrame[playIndex].movZpccase7) / i_max_steps;
-	movXpccase8Inc = (KeyFrame[playIndex + 1].movXpccase8 - KeyFrame[playIndex].movXpccase8) / i_max_steps;
-	movYpccase8Inc = (KeyFrame[playIndex + 1].movYpccase8 - KeyFrame[playIndex].movYpccase8) / i_max_steps;
-	movZpccase8Inc = (KeyFrame[playIndex + 1].movZpccase8 - KeyFrame[playIndex].movZpccase8) / i_max_steps;
-	movXpccase9Inc = (KeyFrame[playIndex + 1].movXpccase9 - KeyFrame[playIndex].movXpccase9) / i_max_steps;
-	movYpccase9Inc = (KeyFrame[playIndex + 1].movYpccase9 - KeyFrame[playIndex].movYpccase9) / i_max_steps;
-	movZpccase9Inc = (KeyFrame[playIndex + 1].movZpccase9 - KeyFrame[playIndex].movZpccase9) / i_max_steps;
-	movXpccase10Inc = (KeyFrame[playIndex + 1].movXpccase10 - KeyFrame[playIndex].movXpccase10) / i_max_steps;
-	movYpccase10Inc = (KeyFrame[playIndex + 1].movYpccase10 - KeyFrame[playIndex].movYpccase10) / i_max_steps;
-	movZpccase10Inc = (KeyFrame[playIndex + 1].movZpccase10 - KeyFrame[playIndex].movZpccase10) / i_max_steps;
-	movXpccase11Inc = (KeyFrame[playIndex + 1].movXpccase11 - KeyFrame[playIndex].movXpccase11) / i_max_steps;
-	movYpccase11Inc = (KeyFrame[playIndex + 1].movYpccase11 - KeyFrame[playIndex].movYpccase11) / i_max_steps;
-	movZpccase11Inc = (KeyFrame[playIndex + 1].movZpccase11 - KeyFrame[playIndex].movZpccase11) / i_max_steps;
-	movXpccase12Inc = (KeyFrame[playIndex + 1].movXpccase12 - KeyFrame[playIndex].movXpccase12) / i_max_steps;
-	movYpccase12Inc = (KeyFrame[playIndex + 1].movYpccase12 - KeyFrame[playIndex].movYpccase12) / i_max_steps;
-	movZpccase12Inc = (KeyFrame[playIndex + 1].movZpccase12 - KeyFrame[playIndex].movZpccase12) / i_max_steps;
-	giroZpccasesInc = (KeyFrame[playIndex + 1].giroZpccases - KeyFrame[playIndex].giroZpccases) / i_max_steps;
-	scalepccasesInc = (KeyFrame[playIndex + 1].scalepccases - KeyFrame[playIndex].scalepccases) / i_max_steps;
 }
 
-unsigned int generateTextures(const char* filename, bool alfa, bool isPrimitive) {
+unsigned int generateTextures(const char* filename, bool alfa, bool isPrimitive)
+{
 	unsigned int textureID;
 	glGenTextures(1, &textureID);
 	glBindTexture(GL_TEXTURE_2D, textureID);
-	// set the texture wrapping parameters
+
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-	// set texture filtering parameters
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-	// load image, create texture and generate mipmaps
+
 	int width, height, nrChannels;
 
-	if (isPrimitive)
-		stbi_set_flip_vertically_on_load(true); // tell stb_image.h to flip loaded texture's on the y-axis.
-	else
-		stbi_set_flip_vertically_on_load(false); // tell stb_image.h to flip loaded texture's on the y-axis.
-
+	if (isPrimitive) stbi_set_flip_vertically_on_load(true);
+	else            stbi_set_flip_vertically_on_load(false);
 
 	unsigned char* data = stbi_load(filename, &width, &height, &nrChannels, 0);
-	if (data)
-	{
-		if (alfa)
-			glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, data);
-		else
-			glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
-		glGenerateMipmap(GL_TEXTURE_2D);
-		return textureID;
-	}
-	else
-	{
-		std::cout << "Failed to load texture" << std::endl;
+	if (!data) {
+		std::cout << "Failed to load texture: " << filename << std::endl;
 		return 100;
 	}
 
+	if (alfa)
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, data);
+	else
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
+
+	glGenerateMipmap(GL_TEXTURE_2D);
 	stbi_image_free(data);
+	return textureID;
 }
 
 void LoadTextures()
@@ -1626,12 +338,33 @@ void LoadTextures()
 	t_toalla = generateTextures("Texturas/toalla.tga", 0, true);
 	t_unam = generateTextures("Texturas/escudo_unam.jpg", 0, true);
 	t_ladrillos = generateTextures("Texturas/bricks.jpg", 0, true);
-	//This must be the last
-	t_white = generateTextures("Texturas/white.jpg", 0, false);
+	t_agua = generateTextures("Texturas/agua.jpg", 0, true);
 	t_mosaico_alberca = generateTextures("Texturas/mosaico_alberca.jpg", 0, true);
 	t_pared_alberca = generateTextures("Texturas/pared_alberca.jpg", 0, true);
-	t_agua = generateTextures("Texturas/agua.jpg", 0, true);
+	t_asta = generateTextures("Texturas/asta.jpg", 0, true);
+	t_gradasjpg = generateTextures("Texturas/gradasjpg.jpg", 0, true);
+	t_Hungria = generateTextures("Textures/Hungria.png", 1, true);
+	t_Australia = generateTextures("Textures/Australia.png", 1, true);
+	t_USA = generateTextures("Textures/USA.png", 1, true);
+	t_boya_roja = generateTextures("Textures/boya_roja.jpg", 0, true);
+	t_asientos = generateTextures("Textures/asientos.jpg", 0, true);
+	t_blanco = generateTextures("Textures/blanco.jpg", 0, true);
+	t_rojo_pelota = generateTextures("Textures/rojo_pelota.jpg", 0, true);
+	t_baseplaforma = generateTextures("Textures/baseplataforma.jpg", 0, true);
+	t_baseplataforma = generateTextures("Textures/baseplaforma.jpg", 0, true);
+	t_cobre = generateTextures("Textures/cobre.jpg", 0, true);
+	t_oro = generateTextures("Textures/oro.jpg", 0, true);
+	t_plata = generateTextures("Textures/plata.jpg", 0, true);
+	t_podio = generateTextures("Textures/podio.jpg", 0, true);
+	//t_Solid_Red = generateTextures("Textures/Solid_red.png", 1, true);
+	t_Solid_white_bordered = generateTextures("Textures/Solid_white_bordered.png", 1, true);
+	t_Cuadro_blanco = generateTextures("Textures/Cuadro_blanco.png", 1, true);
+	t_Black = generateTextures("Textures/Black.png", 1, true);
+	//This must be the last
+	t_white = generateTextures("Texturas/white.jpg", 0, false);
 }
+
+
 
 void animate(void)								//	ES UN CICLO EN SI MISMO
 {
@@ -1643,247 +376,205 @@ void animate(void)								//	ES UN CICLO EN SI MISMO
 			if (playIndex > FrameIndex - 2)	//end of total animation?
 			{
 				std::cout << "Animation ended" << std::endl;
-				//printf("termina anim\n");
 				playIndex = 0;
 				play = false;
 			}
 			else //Next frame interpolations
 			{
 				i_curr_steps = 0; //Reset counter
-				//Interpolation
 				interpolation();
 			}
 		}
 		else
 		{
-			//Draw animation
 			posX += incX;
 			posY += incY;
 			posZ += incZ;
 
 			rotRodIzq += rotRodIzqInc;
 			giroMonito += giroMonitoInc;
-			giroCabeza += giroCabezaInc;						//	CAMBIO EN EL CODIGO
-			giroBrazoDerecho += giroBrazoDerechoInc;			//	CAMBIO EN EL CODIGO
-			girominuto += girominutoInc;						//	CAMBIO EN EL CODIGO
-			girohora += girohoraInc;						//	CAMBIO EN EL CODIGO
-			giropokeball += giropokeballInc;
-			girotapapokeball += girotapapokeballInc;
-
-			movXsilla1 += movXsilla1Inc;
-			movYsilla1 += movXsilla1Inc;
-			movZsilla1 += movZsilla1Inc;
-			movXsilla2 += movXsilla2Inc;
-			movYsilla2 += movYsilla2Inc;
-			movZsilla2 += movZsilla2Inc;
-			movXsilla3 += movXsilla3Inc;
-			movYsilla3 += movYsilla3Inc;
-			movZsilla3 += movZsilla3Inc;
-			movXsilla4 += movXsilla4Inc;
-			movYsilla4 += movYsilla4Inc;
-			movZsilla4 += movZsilla4Inc;
-			movXsilla5 += movXsilla5Inc;
-			movYsilla5 += movYsilla5Inc;
-			movZsilla5 += movZsilla5Inc;
-			movXsilla6 += movXsilla6Inc;
-			movYsilla6 += movYsilla6Inc;
-			movZsilla6 += movZsilla6Inc;
-			movXsilla7 += movXsilla7Inc;
-			movYsilla7 += movYsilla7Inc;
-			movZsilla7 += movZsilla7Inc;
-			movXsilla8 += movXsilla8Inc;
-			movYsilla8 += movYsilla8Inc;
-			movZsilla8 += movZsilla8Inc;
-			movXsilla9 += movXsilla9Inc;
-			movYsilla9 += movYsilla9Inc;
-			movZsilla9 += movZsilla9Inc;
-			movXsilla10 += movXsilla10Inc;
-			movYsilla10 += movYsilla10Inc;
-			movZsilla10 += movZsilla10Inc;
-			movXsilla11 += movXsilla11Inc;
-			movYsilla11 += movYsilla11Inc;
-			movZsilla11 += movZsilla11Inc;
-			movXsilla12 += movXsilla12Inc;
-			movYsilla12 += movYsilla12Inc;
-			movZsilla12 += movZsilla12Inc;
-			movXsilla13 += movXsilla13Inc;
-			movYsilla13 += movYsilla13Inc;
-			movZsilla13 += movZsilla13Inc;
-			movXsilla14 += movXsilla14Inc;
-			movYsilla14 += movYsilla14Inc;
-			movZsilla14 += movZsilla14Inc;
-			movXsilla15 += movXsilla15Inc;
-			movYsilla15 += movYsilla15Inc;
-			movZsilla15 += movZsilla15Inc;
-			movXsilla16 += movXsilla16Inc;
-			movYsilla16 += movYsilla16Inc;
-			movZsilla16 += movZsilla16Inc;
-			movXsilla17 += movXsilla17Inc;
-			movYsilla17 += movYsilla17Inc;
-			movZsilla17 += movZsilla17Inc;
-			movXsilla18 += movXsilla18Inc;
-			movYsilla18 += movYsilla18Inc;
-			movZsilla18 += movZsilla18Inc;
-			movXsilla19 += movXsilla19Inc;
-			movYsilla19 += movYsilla19Inc;
-			movZsilla19 += movZsilla19Inc;
-			movXsilla20 += movXsilla20Inc;
-			movYsilla20 += movYsilla20Inc;
-			movZsilla20 += movZsilla20Inc;
-			movXsilla21 += movXsilla21Inc;
-			movYsilla21 += movYsilla21Inc;
-			movZsilla21 += movZsilla21Inc;
-			movXsilla22 += movXsilla22Inc;
-			movYsilla22 += movYsilla22Inc;
-			movZsilla22 += movZsilla22Inc;
-			movXsilla23 += movXsilla23Inc;
-			movYsilla23 += movYsilla23Inc;
-			movZsilla23 += movZsilla23Inc;
-			movXsilla24 += movXsilla24Inc;
-			movYsilla24 += movYsilla24Inc;
-			movZsilla24 += movZsilla24Inc;
-			giroZsillas += giroZsillasInc;
-			scalesillas += scalesillasInc;
-			movXmesa1 += movXmesa1Inc;
-			movYmesa1 += movYmesa1Inc;
-			movZmesa1 += movZmesa1Inc;
-			movXmesa2 += movXmesa2Inc;
-			movYmesa2 += movYmesa2Inc;
-			movZmesa2 += movZmesa2Inc;
-			movXmesa3 += movXmesa3Inc;
-			movYmesa3 += movYmesa3Inc;
-			movZmesa3 += movZmesa3Inc;
-			movXmesa4 += movXmesa4Inc;
-			movYmesa4 += movYmesa4Inc;
-			movZmesa4 += movZmesa4Inc;
-			movXmesa5 += movXmesa5Inc;
-			movYmesa5 += movYmesa5Inc;
-			movZmesa5 += movZmesa5Inc;
-			movXmesa6 += movXmesa6Inc;
-			movYmesa6 += movYmesa6Inc;
-			movZmesa6 += movZmesa6Inc;
-			movXmesa7 += movXmesa7Inc;
-			movYmesa7 += movYmesa7Inc;
-			movZmesa7 += movZmesa7Inc;
-			movXmesa8 += movXmesa8Inc;
-			movYmesa8 += movYmesa8Inc;
-			movZmesa8 += movZmesa8Inc;
-			movXmesa9 += movXmesa9Inc;
-			movYmesa9 += movYmesa9Inc;
-			movZmesa9 += movZmesa9Inc;
-			movXmesa10 += movXmesa10Inc;
-			movYmesa10 += movYmesa10Inc;
-			movZmesa10 += movZmesa10Inc;
-			movXmesa11 += movXmesa11Inc;
-			movYmesa11 += movYmesa11Inc;
-			movZmesa11 += movZmesa11Inc;
-			movXmesa12 += movXmesa12Inc;
-			movYmesa12 += movYmesa12Inc;
-			movZmesa12 += movZmesa12Inc;
-			giroZmesas += giroZmesasInc;
-			scaleXmesas += scaleXmesasInc;
-			scaleYmesas += scaleYmesasInc;
-			scaleZmesas += scaleZmesasInc;
-			movXdisplay1 += movXdisplay1Inc;
-			movYdisplay1 += movYdisplay1Inc;
-			movZdisplay1 += movZdisplay1Inc;
-			movXdisplay2 += movXdisplay2Inc;
-			movYdisplay2 += movYdisplay2Inc;
-			movZdisplay2 += movZdisplay2Inc;
-			movXdisplay3 += movXdisplay3Inc;
-			movYdisplay3 += movYdisplay3Inc;
-			movZdisplay3 += movZdisplay3Inc;
-			movXdisplay4 += movXdisplay4Inc;
-			movYdisplay4 += movYdisplay4Inc;
-			movZdisplay4 += movZdisplay4Inc;
-			movXdisplay5 += movXdisplay5Inc;
-			movYdisplay5 += movYdisplay5Inc;
-			movZdisplay5 += movZdisplay5Inc;
-			movXdisplay6 += movXdisplay6Inc;
-			movYdisplay6 += movYdisplay6Inc;
-			movZdisplay6 += movZdisplay6Inc;
-			movXdisplay7 += movXdisplay7Inc;
-			movYdisplay7 += movYdisplay7Inc;
-			movZdisplay7 += movZdisplay7Inc;
-			movXdisplay8 += movXdisplay8Inc;
-			movYdisplay8 += movYdisplay8Inc;
-			movZdisplay8 += movZdisplay8Inc;
-			movXdisplay9 += movXdisplay9Inc;
-			movYdisplay9 += movYdisplay9Inc;
-			movZdisplay9 += movZdisplay9Inc;
-			movXdisplay10 += movXdisplay10Inc;
-			movYdisplay10 += movYdisplay10Inc;
-			movZdisplay10 += movZdisplay10Inc;
-			movXdisplay11 += movXdisplay11Inc;
-			movYdisplay11 += movYdisplay11Inc;
-			movZdisplay11 += movZdisplay11Inc;
-			movXdisplay12 += movXdisplay12Inc;
-			movYdisplay12 += movYdisplay12Inc;
-			movZdisplay12 += movZdisplay12Inc;
-			giroZdisplay += giroZdisplayInc;
-			scaledisplay += scaledisplayInc;
-			movXpccase1 += movXpccase1Inc;
-			movYpccase1 += movYpccase1Inc;
-			movZpccase1 += movZpccase1Inc;
-			movXpccase2 += movXpccase2Inc;
-			movYpccase2 += movYpccase2Inc;
-			movZpccase2 += movZpccase2Inc;
-			movXpccase3 += movXpccase3Inc;
-			movYpccase3 += movYpccase3Inc;
-			movZpccase3 += movZpccase3Inc;
-			movXpccase4 += movXpccase4Inc;
-			movYpccase4 += movYpccase4Inc;
-			movZpccase4 += movZpccase4Inc;
-			movXpccase5 += movXpccase5Inc;
-			movYpccase5 += movYpccase5Inc;
-			movZpccase5 += movZpccase5Inc;
-			movXpccase6 += movXpccase6Inc;
-			movYpccase6 += movYpccase6Inc;
-			movZpccase6 += movZpccase6Inc;
-			movXpccase7 += movXpccase7Inc;
-			movYpccase7 += movYpccase7Inc;
-			movZpccase7 += movZpccase7Inc;
-			movXpccase8 += movXpccase8Inc;
-			movYpccase8 += movYpccase8Inc;
-			movZpccase8 += movZpccase8Inc;
-			movXpccase9 += movXpccase9Inc;
-			movYpccase9 += movYpccase9Inc;
-			movZpccase9 += movZpccase9Inc;
-			movXpccase10 += movXpccase10Inc;
-			movYpccase10 += movYpccase10Inc;
-			movZpccase10 += movZpccase10Inc;
-			movXpccase11 += movXpccase11Inc;
-			movYpccase11 += movYpccase11Inc;
-			movZpccase11 += movZpccase11Inc;
-			movXpccase12 += movXpccase12Inc;
-			movYpccase12 += movYpccase12Inc;
-			movZpccase12 += movZpccase12Inc;
-			giroZpccases += giroZpccasesInc;
-			scalepccases += scalepccasesInc;
+			giroCabeza += giroCabezaInc;
+			giroBrazoDerecho += giroBrazoDerechoInc;
 
 			i_curr_steps++;
 		}
 	}
 
-	//VehÃ­culo
+	//Vehículo
 	if (animacion)
 	{
-		return;
+		movAuto_x += 3.0f;
 	}
-	if (animacion2) {
-		return;
+
+	// ------------------- Pelota: movimiento perímetro + rebote + giro -------------------
+	if (ballFollowPerimeter)
+	{
+		
+		float dt = (float)deltaTime / 1000.0f;
+		if (dt > 0.05f) dt = 0.05f; // clamp para evitar saltos cuando hay lag
+
+		// Rebote vertical (solo hacia arriba)
+		bouncePhase += bounceFreq * dt;
+		float bounceY = bounceAmp * fabsf(sinf(bouncePhase * 2.0f * 3.1415926f));
+
+		// Avance
+		float step = ballSpeed * dt;
+
+		switch (ballEdge)
+		{
+		case 0: // +X (sobre poolMinZ)
+			ballX += step;
+			if (ballX >= poolMaxX) { ballX = poolMaxX; ballEdge = 1; }
+			break;
+
+		case 1: // +Z (sobre poolMaxX)
+			ballZ += step;
+			if (ballZ >= poolMaxZ) { ballZ = poolMaxZ; ballEdge = 2; }
+			break;
+
+		case 2: // -X (sobre poolMaxZ)
+			ballX -= step;
+			if (ballX <= poolMinX) { ballX = poolMinX; ballEdge = 3; }
+			break;
+
+		case 3: // -Z (sobre poolMinX)
+			ballZ -= step;
+			if (ballZ <= poolMinZ) { ballZ = poolMinZ; ballEdge = 0; }
+			break;
+		}
+
+		// Altura final
+		ballY = ballBaseY + bounceY;
+
+		// Rotación realista por distancia recorrida:
+		// gradosPorUnidad = 360 / (2*pi*R)
+		float degreesPerUnit = 360.0f / (2.0f * 3.1415926f * ballRadius);
+		ballRot += step * degreesPerUnit;
+		if (ballRot > 360.0f) ballRot -= 360.0f;
 	}
-	if (animacion3) {
-		return;
+
+	// ------------------- SECUENCIA POKEBALL: mover->abrir->meter podium->cerrar -------------------
+	{
+		float dt = (float)deltaTime / 1000.0f;
+		if (dt > 0.05f) dt = 0.05f;
+
+		if (pbSequence && pbState == PB_IDLE) {
+			// Reset de animación al arrancar
+			pbPos = pbStartPos;
+			pbOpenAngle = 0.0f;
+
+			podiumVisible = true;
+			podiumAnimPos = podiumPos;
+			podiumAnimScale = podiumScaleWorld;
+
+			pbState = PB_MOVE;
+		}
+
+		if (!pbSequence && pbState != PB_IDLE && pbState != PB_DONE) {
+			// 
+		}
+
+		switch (pbState)
+		{
+		case PB_IDLE:
+			break;
+
+		case PB_MOVE:
+		{
+			glm::vec3 target = podiumPos + glm::vec3(0.0f, 0.0f, -pbStopDist);
+			target.y = podiumPos.y + 28.0f; // offset arriba del podio
+
+
+			glm::vec3 dir = target - pbPos;
+			float dist = glm::length(dir);
+
+			if (dist < 0.5f) {
+				pbPos = target;
+				pbState = PB_OPENING;
+			}
+			else {
+				dir = dir / dist;
+				pbPos += dir * pbMoveSpeed * dt;
+			}
+		}
+		break;
+
+		case PB_OPENING:
+			pbOpenAngle += pbOpenSpeed * dt;
+			if (pbOpenAngle >= pbOpenMax) {
+				pbOpenAngle = pbOpenMax;
+				pbState = PB_SUCK;
+			}
+			break;
+
+		case PB_SUCK:
+		{
+			// Punto de captura en mundo
+			glm::vec3 captureWorld = pbPos + pbCaptureLocal; // 
+
+			// Mover podio hacia la pokeball
+			glm::vec3 dir = captureWorld - podiumAnimPos;
+			float dist = glm::length(dir);
+			if (dist > 0.001f) dir /= dist;
+
+			podiumAnimPos += dir * podiumPullSpeed * dt;
+
+			// Reducir escala
+			podiumAnimScale -= podiumShrinkSpeed * dt;
+			if (podiumAnimScale < 0.05f) podiumAnimScale = 0.05f;
+
+			// Cuando ya esté casi dentro
+			if (dist < 1.5f && podiumAnimScale <= 0.08f) {
+				podiumVisible = false;
+				pbState = PB_CLOSING;
+			}
+		}
+		break;
+
+		case PB_CLOSING:
+			pbOpenAngle -= pbOpenSpeed * dt;
+			if (pbOpenAngle <= 0.0f) {
+				pbOpenAngle = 0.0f;
+				pbState = PB_DONE;
+				pbSequence = false; // termina secuencia
+			}
+			break;
+
+		case PB_DONE:
+			// Se queda cerrada
+			break;
+		}
 	}
-	if (animacion4) {
-		return;
+	// ------------------- GRADAS : rotar + subir + desaparecer -------------------
+	{
+		float dt = (float)deltaTime / 1000.0f;
+		if (dt > 0.05f) dt = 0.05f;
+
+		if (gradesAnim && gradesScale01 > 0.0f)
+		{
+			gradesRotY += gradesRotSpeed * dt;
+			if (gradesRotY > 360.0f) gradesRotY -= 360.0f;
+
+			gradesLiftY += gradesLiftSpeed * dt;
+			if (gradesLiftY > gradesLiftMax) gradesLiftY = gradesLiftMax;
+
+			gradesScale01 -= gradesFadeSpeed * dt;
+			if (gradesScale01 < 0.0f) gradesScale01 = 0.0f;
+		}
 	}
+
+// ------------------- Agua: ola procedural -------------------
+{
+	float dt = (float)deltaTime / 1000.0f;
+	if (dt > 0.05f) dt = 0.05f;
+
+	waterTime += dt * waterSpeed;
+	waterOffsetY = sinf(waterTime) * waterAmp;
+}
 
 }
 
-void getResolution()
-{
+void getResolution() {
 	const GLFWvidmode* mode = glfwGetVideoMode(glfwGetPrimaryMonitor());
 	SCR_WIDTH = mode->width;
 	SCR_HEIGHT = (mode->height) - 80;
@@ -1915,88 +606,113 @@ void myData() {
 	};
 
 	GLfloat verticesCubo[] = {
-		//Position				//Color
-		-0.5f, -0.5f, 0.5f,		//V0 - Frontal
-		0.5f, -0.5f, 0.5f,		//V1
-		0.5f, 0.5f, 0.5f,		//V5
-		-0.5f, -0.5f, 0.5f,		//V0
-		-0.5f, 0.5f, 0.5f,		//V4
-		0.5f, 0.5f, 0.5f,		//V5
+		//Position				//texture coords
+		-0.5f, -0.5f, 0.5f,		0.0f, 0.0f,	//V0 - Frontal
+		0.5f, -0.5f, 0.5f,		1.0f, 0.0f,	//V1
+		0.5f, 0.5f, 0.5f,		1.0f, 1.0f,	//V5
+		-0.5f, -0.5f, 0.5f,		0.0f, 0.0f,	//V0
+		-0.5f, 0.5f, 0.5f,		0.0f, 1.0f,	//V4
+		0.5f, 0.5f, 0.5f,		1.0f, 1.0f,	//V5
 
-		0.5f, -0.5f, -0.5f,		//V2 - Trasera
-		-0.5f, -0.5f, -0.5f,	//V3
-		-0.5f, 0.5f, -0.5f,		//V7
-		0.5f, -0.5f, -0.5f,		//V2
-		0.5f, 0.5f, -0.5f,		//V6
-		-0.5f, 0.5f, -0.5f,		//V7
+		0.5f, -0.5f, -0.5f,		0.0f, 0.0f,	//V2 - Trasera
+		-0.5f, -0.5f, -0.5f,	1.0f, 0.0f,	//V3
+		-0.5f, 0.5f, -0.5f,		1.0f, 1.0f,	//V7
+		0.5f, -0.5f, -0.5f,		0.0f, 0.0f,	//V2
+		0.5f, 0.5f, -0.5f,		0.0f, 1.0f,	//V6
+		-0.5f, 0.5f, -0.5f,		1.0f, 1.0f,	//V7
 
-		-0.5f, 0.5f, 0.5f,		//V4 - Izq
-		-0.5f, 0.5f, -0.5f,		//V7
-		-0.5f, -0.5f, -0.5f,	//V3
-		-0.5f, -0.5f, -0.5f,	//V3
-		-0.5f, 0.5f, 0.5f,		//V4
-		-0.5f, -0.5f, 0.5f,		//V0
+		-0.5f, 0.5f, 0.5f,		0.0f, 1.0f,	//V4 - Izq
+		-0.5f, 0.5f, -0.5f,		0.0f, 1.0f,	//V7
+		-0.5f, -0.5f, -0.5f,	0.0f, 1.0f,	//V3
+		-0.5f, -0.5f, -0.5f,	0.0f, 1.0f,	//V3
+		-0.5f, 0.5f, 0.5f,		0.0f, 1.0f,	//V4
+		-0.5f, -0.5f, 0.5f,		0.0f, 1.0f,	//V0
 
-		0.5f, 0.5f, 0.5f,		//V5 - Der
-		0.5f, -0.5f, 0.5f,		//V1
-		0.5f, -0.5f, -0.5f,		//V2
-		0.5f, 0.5f, 0.5f,		//V5
-		0.5f, 0.5f, -0.5f,		//V6
-		0.5f, -0.5f, -0.5f,		//V2
+		0.5f, 0.5f, 0.5f,		1.0f, 0.0f,	//V5 - Der
+		0.5f, -0.5f, 0.5f,		1.0f, 0.0f,	//V1
+		0.5f, -0.5f, -0.5f,		1.0f, 0.0f,	//V2
+		0.5f, 0.5f, 0.5f,		1.0f, 0.0f,	//V5
+		0.5f, 0.5f, -0.5f,		1.0f, 0.0f,	//V6
+		0.5f, -0.5f, -0.5f,		1.0f, 0.0f,	//V2
 
-		-0.5f, 0.5f, 0.5f,		//V4 - Sup
-		0.5f, 0.5f, 0.5f,		//V5
-		0.5f, 0.5f, -0.5f,		//V6
-		-0.5f, 0.5f, 0.5f,		//V4
-		-0.5f, 0.5f, -0.5f,		//V7
-		0.5f, 0.5f, -0.5f,		//V6
+		-0.5f, 0.5f, 0.5f,		0.0f, 1.0f,	//V4 - Sup
+		0.5f, 0.5f, 0.5f,		0.0f, 1.0f,	//V5
+		0.5f, 0.5f, -0.5f,		0.0f, 1.0f,	//V6
+		-0.5f, 0.5f, 0.5f,		0.0f, 1.0f,	//V4
+		-0.5f, 0.5f, -0.5f,		0.0f, 1.0f,	//V7
+		0.5f, 0.5f, -0.5f,		0.0f, 1.0f,	//V6
 
-		-0.5f, -0.5f, 0.5f,		//V0 - Inf
-		-0.5f, -0.5f, -0.5f,	//V3
-		0.5f, -0.5f, -0.5f,		//V2
-		-0.5f, -0.5f, 0.5f,		//V0
-		0.5f, -0.5f, -0.5f,		//V2
-		0.5f, -0.5f, 0.5f,		//V1
+		-0.5f, -0.5f, 0.5f,		1.0f, 1.0f,	//V0 - Inf
+		-0.5f, -0.5f, -0.5f,	1.0f, 1.0f,	//V3
+		0.5f, -0.5f, -0.5f,		1.0f, 1.0f,	//V2
+		-0.5f, -0.5f, 0.5f,		1.0f, 1.0f,	//V0
+		0.5f, -0.5f, -0.5f,		1.0f, 1.0f,	//V2
+		0.5f, -0.5f, 0.5f,		1.0f, 1.0f,	//V1
 	};
 
-	glGenVertexArrays(1, &VAO);
-	glBindVertexArray(VAO);
+	glGenVertexArrays(3, VAO);
+	glGenBuffers(3, VBO);
+	glGenBuffers(3, EBO);
 
-	glGenBuffers(1, &VBO);
+	glBindVertexArray(VAO[0]);
+	glBindBuffer(GL_ARRAY_BUFFER, VBO[0]);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
 
-	glBindBuffer(GL_ARRAY_BUFFER, VBO);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(verticesCubo), verticesCubo, GL_STATIC_DRAW);
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO[0]);
+	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
 
 	// position attribute
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)0);
 	glEnableVertexAttribArray(0);
+	// texture coord attribute
+	glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(3 * sizeof(float)));
+	glEnableVertexAttribArray(1);
+
+	//Para Piso
+	glBindVertexArray(VAO[2]);
+	glBindBuffer(GL_ARRAY_BUFFER, VBO[2]);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(verticesPiso), verticesPiso, GL_STATIC_DRAW);
+
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO[2]);
+	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indicesPiso), indicesPiso, GL_STATIC_DRAW);
+
+	// position attribute
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)0);
+	glEnableVertexAttribArray(0);
+	// texture coord attribute
+	glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(3 * sizeof(float)));
+	glEnableVertexAttribArray(1);
+
+
+	//PARA CUBO
+	glBindVertexArray(VAO[1]);
+	glBindBuffer(GL_ARRAY_BUFFER, VBO[1]);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(verticesCubo), verticesCubo, GL_STATIC_DRAW);
+
+	/*glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO[1]);
+	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);*/
+
+	// position attribute
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)0);
+	glEnableVertexAttribArray(0);
+	// texture coord attribute
+	glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(3 * sizeof(float)));
+	glEnableVertexAttribArray(1);
 
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
-
 	glBindVertexArray(0);
 }
 
-int main()
-{
+int main() {
 	// glfw: initialize and configure
-	// ------------------------------
 	glfwInit();
-	/*glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
-	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
-	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);*/
-
-#ifdef __APPLE__
-	glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE); // uncomment this statement to fix compilation on OS X
-#endif
 
 	// glfw window creation
-	// --------------------
 	monitors = glfwGetPrimaryMonitor();
 	getResolution();
 
-	GLFWwindow* window = glfwCreateWindow(SCR_WIDTH, SCR_HEIGHT, "Proyecto Final 2025-2", NULL, NULL);
-	if (window == NULL)
-	{
+	GLFWwindow* window = glfwCreateWindow(SCR_WIDTH, SCR_HEIGHT, "Pratica X 2025-2", NULL, NULL);
+	if (window == NULL) {
 		std::cout << "Failed to create GLFW window" << std::endl;
 		glfwTerminate();
 		return -1;
@@ -2011,28 +727,31 @@ int main()
 	// tell GLFW to capture our mouse
 	glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
 
-
-	// ðŸ”¥ AQUÃ INICIALIZAS GLAD
-	if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)) {
-		std::cerr << "Fallo al inicializar GLAD" << std::endl;
+	// glad: load all OpenGL function pointers
+	// ---------------------------------------
+	if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress))
+	{
+		std::cout << "Failed to initialize GLAD" << std::endl;
 		return -1;
 	}
 
-	//glewInit();
-
-	//This is new
-		//Mis funciones
-		//Datos a utilizar
+	// configure global opengl state
+	// -----------------------------
+	//Mis funciones
+	//Datos a utilizar
 	LoadTextures();
 	myData();
 	glEnable(GL_DEPTH_TEST);
 
-	Shader myShader("shaders/shader_projection.vs", "shaders/shader_projection.fs");
-	//Shader myShader("shaders/shader_texture_color.vs", "shaders/shader_texture_color.fs"); //To use with primitives
+	
+
+	// build and compile shaders
+	// -------------------------
+	Shader myShader("shaders/shader_texture_color.vs", "shaders/shader_texture_color.fs"); //To use with primitives
 	Shader staticShader("Shaders/shader_Lights.vs", "Shaders/shader_Lights_mod.fs");	//To use with static models
 	Shader skyboxShader("Shaders/skybox.vs", "Shaders/skybox.fs");	//To use with skybox
 	Shader animShader("Shaders/anim.vs", "Shaders/anim.fs");	//To use with animated models 
-
+	
 	vector<std::string> faces{
 		"resources/skybox/right.jpg",
 		"resources/skybox/left.jpg",
@@ -2050,852 +769,153 @@ int main()
 	skyboxShader.setInt("skybox", 0);
 
 	// load models
+	// -----------
+
 	
-	Model alberca("resources/objects/Alberca/alberca.obj");
-
-	//Modelo de la Fachada_Q
-	Model Fachada_Q("resources/objects/Fachada_Q/Fachada_Q.obj");
-
-	//Modelo del Laboratorio de Cisco
-	Model Cisco("resources/objects/Cisco/Cisco.obj");
-	Model Pizarron("resources/objects/Pizarron/Pizarron.obj");
-	Model Display("resources/objects/Display/Display.obj");
-	Model PC_Case("resources/objects/PC_Case/PC_Case.obj");
-
-	//Modelo del Laboratorio de Microsoft
-	Model Microsoft("resources/objects/Microsoft/Microsoft.obj");
-
-	//Modelo del Laboratorio de Computacion Grafica
-	Model Grafica("resources/objects/Grafica/Grafica.obj");
-
-
-	//Model BenQ("resources/objects/BenQ/BenQ.obj");
-	//Model Table("resources/objects/Table/Table.obj");
-	//Model chairminpolycount("resources/objects/chairminpolycount/chairminpolycount.obj");
-	Model Desk("resources/objects/Desk/Desk.obj");
-	Model Table("resources/objects/Table/Table.obj");
-	//Model Pokeball1("resources/objects/Pokeball1/Pokeball1.obj");	modelos de prueba para cargar el modelo
-	Model PC_Chair("resources/objects/PC_Chair/PC_Chair.obj");
-
-	Model Base_Labs("resources/objects/Base_Labs/Base_Labs.obj");
-
-	//Modelo para la pokeball
-	Model pivote_pokeball("resources/objects/Pokeball/pivote_pokeball.obj");
+	///////////////////////////////////
+	Model agua("resources/objects/agua/agua.obj");
+	Model basealberca("resources/objects/basealberca/basealberca.obj");
+	Model asta("resources/objects/asta/astas.obj");
+	Model bancaderecha("resources/objects/bancaderecha/bancaderecha.obj");
+	Model bancafrente("resources/objects/bancafrente/bancafrente.obj");
+	Model bancaizq("resources/objects/bancaizq/bancaizq.obj");
+	Model bandehungria("resources/objects/bandehungria/bandehungria.obj");
+	Model banderaaustralia("resources/objects/banderaaustralia/banderaaustralia.obj");
+	Model banderausa("resources/objects/banderausa/banderausa.obj");
+	Model baseladrillo("resources/objects/baseladrillo/baseladrillo.obj");
+	Model boyas("resources/objects/boyas/boyas.obj");
+	Model butacaderecha("resources/objects/butacaderecha/butacaderecha.obj");
+	Model butacafrente("resources/objects/butacafrente/butacafrente.obj");
+	Model butacaizq("resources/objects/butacaizq/butacaizq.obj");
+	Model pelota("resources/objects/pelota/pelota.obj");
+	Model plataforma("resources/objects/plataforma/plataforma.obj");
+	Model podium("resources/objects/podium/podium.obj");
 	Model base_pokeball("resources/objects/Pokeball/base_pokeball.obj");
+	Model pivote_pokeball("resources/objects/Pokeball/pivote_pokeball.obj");
 	Model tapa_pokeball("resources/objects/Pokeball/tapa_pokeball.obj");
 
-	// Frame Index = 0
-	KeyFrame[0].movXsilla1 = 16;
-	KeyFrame[0].movYsilla1 = 13;
-	KeyFrame[0].movZsilla1 = 0;
-	KeyFrame[0].movXsilla2 = 16;
-	KeyFrame[0].movYsilla2 = 23;
-	KeyFrame[0].movZsilla2 = 0;
-	KeyFrame[0].movXsilla3 = 16;
-	KeyFrame[0].movYsilla3 = 35;
-	KeyFrame[0].movZsilla3 = 0;
-	KeyFrame[0].movXsilla4 = 16;
-	KeyFrame[0].movYsilla4 = 45;
-	KeyFrame[0].movZsilla4 = 0;
-	KeyFrame[0].movXsilla5 = 16;
-	KeyFrame[0].movYsilla5 = -10;
-	KeyFrame[0].movZsilla5 = 0;
-	KeyFrame[0].movXsilla6 = 16;
-	KeyFrame[0].movYsilla6 = -20;
-	KeyFrame[0].movZsilla6 = 0;
-	KeyFrame[0].movXsilla7 = 16;
-	KeyFrame[0].movYsilla7 = -33;
-	KeyFrame[0].movZsilla7 = 0;
-	KeyFrame[0].movXsilla8 = 16;
-	KeyFrame[0].movYsilla8 = -43;
-	KeyFrame[0].movZsilla8 = 0;
-	KeyFrame[0].movXsilla9 = -10;
-	KeyFrame[0].movYsilla9 = 13;
-	KeyFrame[0].movZsilla9 = 0;
-	KeyFrame[0].movXsilla10 = -10;
-	KeyFrame[0].movYsilla10 = 23;
-	KeyFrame[0].movZsilla10 = 0;
-	KeyFrame[0].movXsilla11 = -10;
-	KeyFrame[0].movYsilla11 = 35;
-	KeyFrame[0].movZsilla11 = 0;
-	KeyFrame[0].movXsilla12 = -10;
-	KeyFrame[0].movYsilla12 = 45;
-	KeyFrame[0].movZsilla12 = 0;
-	KeyFrame[0].movXsilla13 = -10;
-	KeyFrame[0].movYsilla13 = -10;
-	KeyFrame[0].movZsilla13 = 0;
-	KeyFrame[0].movXsilla14 = -10;
-	KeyFrame[0].movYsilla14 = -20;
-	KeyFrame[0].movZsilla14 = 0;
-	KeyFrame[0].movXsilla15 = -10;
-	KeyFrame[0].movYsilla15 = -33;
-	KeyFrame[0].movZsilla15 = 0;
-	KeyFrame[0].movXsilla16 = -10;
-	KeyFrame[0].movYsilla16 = -43;
-	KeyFrame[0].movZsilla16 = 0;
-	KeyFrame[0].movXsilla17 = -35;
-	KeyFrame[0].movYsilla17 = 13;
-	KeyFrame[0].movZsilla17 = 0;
-	KeyFrame[0].movXsilla18 = -35;
-	KeyFrame[0].movYsilla18 = 23;
-	KeyFrame[0].movZsilla18 = 0;
-	KeyFrame[0].movXsilla19 = -35;
-	KeyFrame[0].movYsilla19 = 35;
-	KeyFrame[0].movZsilla19 = 0;
-	KeyFrame[0].movXsilla20 = -35;
-	KeyFrame[0].movYsilla20 = 45;
-	KeyFrame[0].movZsilla20 = 0;
-	KeyFrame[0].movXsilla21 = -35;
-	KeyFrame[0].movYsilla21 = -10;
-	KeyFrame[0].movZsilla21 = 0;
-	KeyFrame[0].movXsilla22 = -35;
-	KeyFrame[0].movYsilla22 = -20;
-	KeyFrame[0].movZsilla22 = 0;
-	KeyFrame[0].movXsilla23 = -35;
-	KeyFrame[0].movYsilla23 = -33;
-	KeyFrame[0].movZsilla23 = 0;
-	KeyFrame[0].movXsilla24 = -35;
-	KeyFrame[0].movYsilla24 = -43;
-	KeyFrame[0].movZsilla24 = 0;
-	KeyFrame[0].giroZsillas = 67;
-	KeyFrame[0].scalesillas = 12;
-	KeyFrame[0].movXmesa1 = 30;
-	KeyFrame[0].movYmesa1 = 16;
-	KeyFrame[0].movZmesa1 = 0;
-	KeyFrame[0].movXmesa2 = 30;
-	KeyFrame[0].movYmesa2 = 38;
-	KeyFrame[0].movZmesa2 = 0;
-	KeyFrame[0].movXmesa3 = 30;
-	KeyFrame[0].movYmesa3 = -16;
-	KeyFrame[0].movZmesa3 = 0;
-	KeyFrame[0].movXmesa4 = 30;
-	KeyFrame[0].movYmesa4 = -38;
-	KeyFrame[0].movZmesa4 = 0;
-	KeyFrame[0].movXmesa5 = 5;
-	KeyFrame[0].movYmesa5 = 16;
-	KeyFrame[0].movZmesa5 = 0;
-	KeyFrame[0].movXmesa6 = 5;
-	KeyFrame[0].movYmesa6 = 38;
-	KeyFrame[0].movZmesa6 = 0;
-	KeyFrame[0].movXmesa7 = 5;
-	KeyFrame[0].movYmesa7 = -16;
-	KeyFrame[0].movZmesa7 = 0;
-	KeyFrame[0].movXmesa8 = 5;
-	KeyFrame[0].movYmesa8 = -38;
-	KeyFrame[0].movZmesa8 = 0;
-	KeyFrame[0].movXmesa9 = -20;
-	KeyFrame[0].movYmesa9 = 16;
-	KeyFrame[0].movZmesa9 = 0;
-	KeyFrame[0].movXmesa10 = -20;
-	KeyFrame[0].movYmesa10 = 38;
-	KeyFrame[0].movZmesa10 = 0;
-	KeyFrame[0].movXmesa11 = -20;
-	KeyFrame[0].movYmesa11 = -16;
-	KeyFrame[0].movZmesa11 = 0;
-	KeyFrame[0].movXmesa12 = -20;
-	KeyFrame[0].movYmesa12 = -38;
-	KeyFrame[0].movZmesa12 = 0;
-	KeyFrame[0].giroZmesas = 270;
-	KeyFrame[0].scaleXmesas = 19;
-	KeyFrame[0].scaleYmesas = 15;
-	KeyFrame[0].scaleZmesas = 16;
-	KeyFrame[0].movXdisplay1 = 24;
-	KeyFrame[0].movYdisplay1 = 16;
-	KeyFrame[0].movZdisplay1 = 13;
-	KeyFrame[0].movXdisplay2 = 24;
-	KeyFrame[0].movYdisplay2 = 39;
-	KeyFrame[0].movZdisplay2 = 13;
-	KeyFrame[0].movXdisplay3 = 24;
-	KeyFrame[0].movYdisplay3 = -16;
-	KeyFrame[0].movZdisplay3 = 13;
-	KeyFrame[0].movXdisplay4 = 24;
-	KeyFrame[0].movYdisplay4 = -39;
-	KeyFrame[0].movZdisplay4 = 13;
-	KeyFrame[0].movXdisplay5 = -1;
-	KeyFrame[0].movYdisplay5 = 16;
-	KeyFrame[0].movZdisplay5 = 13;
-	KeyFrame[0].movXdisplay6 = -1;
-	KeyFrame[0].movYdisplay6 = 38;
-	KeyFrame[0].movZdisplay6 = 13;
-	KeyFrame[0].movXdisplay7 = -1;
-	KeyFrame[0].movYdisplay7 = -16;
-	KeyFrame[0].movZdisplay7 = 13;
-	KeyFrame[0].movXdisplay8 = -1;
-	KeyFrame[0].movYdisplay8 = -39;
-	KeyFrame[0].movZdisplay8 = 13;
-	KeyFrame[0].movXdisplay9 = -26;
-	KeyFrame[0].movYdisplay9 = 16;
-	KeyFrame[0].movZdisplay9 = 13;
-	KeyFrame[0].movXdisplay10 = -26;
-	KeyFrame[0].movYdisplay10 = 39;
-	KeyFrame[0].movZdisplay10 = 13;
-	KeyFrame[0].movXdisplay11 = -26;
-	KeyFrame[0].movYdisplay11 = -16;
-	KeyFrame[0].movZdisplay11 = 13;
-	KeyFrame[0].movXdisplay12 = -26;
-	KeyFrame[0].movYdisplay12 = -39;
-	KeyFrame[0].movZdisplay12 = 13;
-	KeyFrame[0].giroZdisplay = 270;
-	KeyFrame[0].scaledisplay = 2.5;
-	KeyFrame[0].movXpccase1 = 24;
-	KeyFrame[0].movYpccase1 = 25;
-	KeyFrame[0].movZpccase1 = 16;
-	KeyFrame[0].movXpccase2 = 24;
-	KeyFrame[0].movYpccase2 = 30;
-	KeyFrame[0].movZpccase2 = 16;
-	KeyFrame[0].movXpccase3 = 24;
-	KeyFrame[0].movYpccase3 = -25;
-	KeyFrame[0].movZpccase3 = 16;
-	KeyFrame[0].movXpccase4 = 24;
-	KeyFrame[0].movYpccase4 = -30;
-	KeyFrame[0].movZpccase4 = 16;
-	KeyFrame[0].movXpccase5 = -1;
-	KeyFrame[0].movYpccase5 = 25;
-	KeyFrame[0].movZpccase5 = 16;
-	KeyFrame[0].movXpccase6 = -1;
-	KeyFrame[0].movYpccase6 = 30;
-	KeyFrame[0].movZpccase6 = 16;
-	KeyFrame[0].movXpccase7 = -1;
-	KeyFrame[0].movYpccase7 = -25;
-	KeyFrame[0].movZpccase7 = 16;
-	KeyFrame[0].movXpccase8 = -1;
-	KeyFrame[0].movYpccase8 = -30;
-	KeyFrame[0].movZpccase8 = 16;
-	KeyFrame[0].movXpccase9 = -26;
-	KeyFrame[0].movYpccase9 = 25;
-	KeyFrame[0].movZpccase9 = 16;
-	KeyFrame[0].movXpccase10 = -26;
-	KeyFrame[0].movYpccase10 = 30;
-	KeyFrame[0].movZpccase10 = 16;
-	KeyFrame[0].movXpccase11 = -26;
-	KeyFrame[0].movYpccase11 = -25;
-	KeyFrame[0].movZpccase11 = 16;
-	KeyFrame[0].movXpccase12 = -26;
-	KeyFrame[0].movYpccase12 = -30;
-	KeyFrame[0].movZpccase12 = 16;
-	KeyFrame[0].giroZpccases = 180;
-	KeyFrame[0].scalepccases = 2.5;
 
-	// Frame Index = 1
-	KeyFrame[1].movXsilla1 = 16;
-	KeyFrame[1].movYsilla1 = 13;
-	KeyFrame[1].movZsilla1 = 0;
-	KeyFrame[1].movXsilla2 = 16;
-	KeyFrame[1].movYsilla2 = 23;
-	KeyFrame[1].movZsilla2 = 0;
-	KeyFrame[1].movXsilla3 = 16;
-	KeyFrame[1].movYsilla3 = 35;
-	KeyFrame[1].movZsilla3 = 0;
-	KeyFrame[1].movXsilla4 = 16;
-	KeyFrame[1].movYsilla4 = 45;
-	KeyFrame[1].movZsilla4 = 0;
-	KeyFrame[1].movXsilla5 = 16;
-	KeyFrame[1].movYsilla5 = -10;
-	KeyFrame[1].movZsilla5 = 0;
-	KeyFrame[1].movXsilla6 = 16;
-	KeyFrame[1].movYsilla6 = -20;
-	KeyFrame[1].movZsilla6 = 0;
-	KeyFrame[1].movXsilla7 = 16;
-	KeyFrame[1].movYsilla7 = -33;
-	KeyFrame[1].movZsilla7 = 0;
-	KeyFrame[1].movXsilla8 = 16;
-	KeyFrame[1].movYsilla8 = -43;
-	KeyFrame[1].movZsilla8 = 0;
-	KeyFrame[1].movXsilla9 = -10;
-	KeyFrame[1].movYsilla9 = 13;
-	KeyFrame[1].movZsilla9 = 0;
-	KeyFrame[1].movXsilla10 = -10;
-	KeyFrame[1].movYsilla10 = 23;
-	KeyFrame[1].movZsilla10 = 0;
-	KeyFrame[1].movXsilla11 = -10;
-	KeyFrame[1].movYsilla11 = 35;
-	KeyFrame[1].movZsilla11 = 0;
-	KeyFrame[1].movXsilla12 = -10;
-	KeyFrame[1].movYsilla12 = 45;
-	KeyFrame[1].movZsilla12 = 0;
-	KeyFrame[1].movXsilla13 = -10;
-	KeyFrame[1].movYsilla13 = -10;
-	KeyFrame[1].movZsilla13 = 0;
-	KeyFrame[1].movXsilla14 = -10;
-	KeyFrame[1].movYsilla14 = -20;
-	KeyFrame[1].movZsilla14 = 0;
-	KeyFrame[1].movXsilla15 = -10;
-	KeyFrame[1].movYsilla15 = -33;
-	KeyFrame[1].movZsilla15 = 0;
-	KeyFrame[1].movXsilla16 = -10;
-	KeyFrame[1].movYsilla16 = -43;
-	KeyFrame[1].movZsilla16 = 0;
-	KeyFrame[1].movXsilla17 = -35;
-	KeyFrame[1].movYsilla17 = 13;
-	KeyFrame[1].movZsilla17 = 0;
-	KeyFrame[1].movXsilla18 = -35;
-	KeyFrame[1].movYsilla18 = 23;
-	KeyFrame[1].movZsilla18 = 0;
-	KeyFrame[1].movXsilla19 = -35;
-	KeyFrame[1].movYsilla19 = 35;
-	KeyFrame[1].movZsilla19 = 0;
-	KeyFrame[1].movXsilla20 = -35;
-	KeyFrame[1].movYsilla20 = 45;
-	KeyFrame[1].movZsilla20 = 0;
-	KeyFrame[1].movXsilla21 = -35;
-	KeyFrame[1].movYsilla21 = -10;
-	KeyFrame[1].movZsilla21 = 0;
-	KeyFrame[1].movXsilla22 = -35;
-	KeyFrame[1].movYsilla22 = -20;
-	KeyFrame[1].movZsilla22 = 0;
-	KeyFrame[1].movXsilla23 = -35;
-	KeyFrame[1].movYsilla23 = -33;
-	KeyFrame[1].movZsilla23 = 0;
-	KeyFrame[1].movXsilla24 = -35;
-	KeyFrame[1].movYsilla24 = -43;
-	KeyFrame[1].movZsilla24 = 0;
-	KeyFrame[1].giroZsillas = 340;
-	KeyFrame[1].scalesillas = 12;
-	KeyFrame[1].movXmesa1 = 30;
-	KeyFrame[1].movYmesa1 = 16;
-	KeyFrame[1].movZmesa1 = 0;
-	KeyFrame[1].movXmesa2 = 30;
-	KeyFrame[1].movYmesa2 = 38;
-	KeyFrame[1].movZmesa2 = 0;
-	KeyFrame[1].movXmesa3 = 30;
-	KeyFrame[1].movYmesa3 = -16;
-	KeyFrame[1].movZmesa3 = 0;
-	KeyFrame[1].movXmesa4 = 30;
-	KeyFrame[1].movYmesa4 = -38;
-	KeyFrame[1].movZmesa4 = 0;
-	KeyFrame[1].movXmesa5 = 5;
-	KeyFrame[1].movYmesa5 = 16;
-	KeyFrame[1].movZmesa5 = 0;
-	KeyFrame[1].movXmesa6 = 5;
-	KeyFrame[1].movYmesa6 = 38;
-	KeyFrame[1].movZmesa6 = 0;
-	KeyFrame[1].movXmesa7 = 5;
-	KeyFrame[1].movYmesa7 = -16;
-	KeyFrame[1].movZmesa7 = 0;
-	KeyFrame[1].movXmesa8 = 5;
-	KeyFrame[1].movYmesa8 = -38;
-	KeyFrame[1].movZmesa8 = 0;
-	KeyFrame[1].movXmesa9 = -20;
-	KeyFrame[1].movYmesa9 = 16;
-	KeyFrame[1].movZmesa9 = 0;
-	KeyFrame[1].movXmesa10 = -20;
-	KeyFrame[1].movYmesa10 = 38;
-	KeyFrame[1].movZmesa10 = 0;
-	KeyFrame[1].movXmesa11 = -20;
-	KeyFrame[1].movYmesa11 = -16;
-	KeyFrame[1].movZmesa11 = 0;
-	KeyFrame[1].movXmesa12 = -20;
-	KeyFrame[1].movYmesa12 = -38;
-	KeyFrame[1].movZmesa12 = 0;
-	KeyFrame[1].giroZmesas = 270;
-	KeyFrame[1].scaleXmesas = 19;
-	KeyFrame[1].scaleYmesas = 15;
-	KeyFrame[1].scaleZmesas = 16;
-	KeyFrame[1].movXdisplay1 = 24;
-	KeyFrame[1].movYdisplay1 = 16;
-	KeyFrame[1].movZdisplay1 = 13;
-	KeyFrame[1].movXdisplay2 = 24;
-	KeyFrame[1].movYdisplay2 = 39;
-	KeyFrame[1].movZdisplay2 = 13;
-	KeyFrame[1].movXdisplay3 = 24;
-	KeyFrame[1].movYdisplay3 = -16;
-	KeyFrame[1].movZdisplay3 = 13;
-	KeyFrame[1].movXdisplay4 = 24;
-	KeyFrame[1].movYdisplay4 = -39;
-	KeyFrame[1].movZdisplay4 = 13;
-	KeyFrame[1].movXdisplay5 = -1;
-	KeyFrame[1].movYdisplay5 = 16;
-	KeyFrame[1].movZdisplay5 = 13;
-	KeyFrame[1].movXdisplay6 = -1;
-	KeyFrame[1].movYdisplay6 = 38;
-	KeyFrame[1].movZdisplay6 = 13;
-	KeyFrame[1].movXdisplay7 = -1;
-	KeyFrame[1].movYdisplay7 = -16;
-	KeyFrame[1].movZdisplay7 = 13;
-	KeyFrame[1].movXdisplay8 = -1;
-	KeyFrame[1].movYdisplay8 = -39;
-	KeyFrame[1].movZdisplay8 = 13;
-	KeyFrame[1].movXdisplay9 = -26;
-	KeyFrame[1].movYdisplay9 = 16;
-	KeyFrame[1].movZdisplay9 = 13;
-	KeyFrame[1].movXdisplay10 = -26;
-	KeyFrame[1].movYdisplay10 = 39;
-	KeyFrame[1].movZdisplay10 = 13;
-	KeyFrame[1].movXdisplay11 = -26;
-	KeyFrame[1].movYdisplay11 = -16;
-	KeyFrame[1].movZdisplay11 = 13;
-	KeyFrame[1].movXdisplay12 = -26;
-	KeyFrame[1].movYdisplay12 = -39;
-	KeyFrame[1].movZdisplay12 = 13;
-	KeyFrame[1].giroZdisplay = 270;
-	KeyFrame[1].scaledisplay = 2.5;
-	KeyFrame[1].movXpccase1 = 24;
-	KeyFrame[1].movYpccase1 = 25;
-	KeyFrame[1].movZpccase1 = 16;
-	KeyFrame[1].movXpccase2 = 24;
-	KeyFrame[1].movYpccase2 = 30;
-	KeyFrame[1].movZpccase2 = 16;
-	KeyFrame[1].movXpccase3 = 24;
-	KeyFrame[1].movYpccase3 = -25;
-	KeyFrame[1].movZpccase3 = 16;
-	KeyFrame[1].movXpccase4 = 24;
-	KeyFrame[1].movYpccase4 = -30;
-	KeyFrame[1].movZpccase4 = 16;
-	KeyFrame[1].movXpccase5 = -1;
-	KeyFrame[1].movYpccase5 = 25;
-	KeyFrame[1].movZpccase5 = 16;
-	KeyFrame[1].movXpccase6 = -1;
-	KeyFrame[1].movYpccase6 = 30;
-	KeyFrame[1].movZpccase6 = 16;
-	KeyFrame[1].movXpccase7 = -1;
-	KeyFrame[1].movYpccase7 = -25;
-	KeyFrame[1].movZpccase7 = 16;
-	KeyFrame[1].movXpccase8 = -1;
-	KeyFrame[1].movYpccase8 = -30;
-	KeyFrame[1].movZpccase8 = 16;
-	KeyFrame[1].movXpccase9 = -26;
-	KeyFrame[1].movYpccase9 = 25;
-	KeyFrame[1].movZpccase9 = 16;
-	KeyFrame[1].movXpccase10 = -26;
-	KeyFrame[1].movYpccase10 = 30;
-	KeyFrame[1].movZpccase10 = 16;
-	KeyFrame[1].movXpccase11 = -26;
-	KeyFrame[1].movYpccase11 = -25;
-	KeyFrame[1].movZpccase11 = 16;
-	KeyFrame[1].movXpccase12 = -26;
-	KeyFrame[1].movYpccase12 = -30;
-	KeyFrame[1].movZpccase12 = 16;
-	KeyFrame[1].giroZpccases = 180;
-	KeyFrame[1].scalepccases = 2.5;
 
-	// Frame Index = 2
-	KeyFrame[2].movXsilla1 = 16;
-	KeyFrame[2].movYsilla1 = 13;
-	KeyFrame[2].movZsilla1 = 0;
-	KeyFrame[2].movXsilla2 = 16;
-	KeyFrame[2].movYsilla2 = 23;
-	KeyFrame[2].movZsilla2 = 0;
-	KeyFrame[2].movXsilla3 = 16;
-	KeyFrame[2].movYsilla3 = 35;
-	KeyFrame[2].movZsilla3 = 0;
-	KeyFrame[2].movXsilla4 = 16;
-	KeyFrame[2].movYsilla4 = 45;
-	KeyFrame[2].movZsilla4 = 0;
-	KeyFrame[2].movXsilla5 = 16;
-	KeyFrame[2].movYsilla5 = -10;
-	KeyFrame[2].movZsilla5 = 0;
-	KeyFrame[2].movXsilla6 = 16;
-	KeyFrame[2].movYsilla6 = -20;
-	KeyFrame[2].movZsilla6 = 0;
-	KeyFrame[2].movXsilla7 = 16;
-	KeyFrame[2].movYsilla7 = -33;
-	KeyFrame[2].movZsilla7 = 0;
-	KeyFrame[2].movXsilla8 = 16;
-	KeyFrame[2].movYsilla8 = -43;
-	KeyFrame[2].movZsilla8 = 0;
-	KeyFrame[2].movXsilla9 = -10;
-	KeyFrame[2].movYsilla9 = 13;
-	KeyFrame[2].movZsilla9 = 0;
-	KeyFrame[2].movXsilla10 = -10;
-	KeyFrame[2].movYsilla10 = 23;
-	KeyFrame[2].movZsilla10 = 0;
-	KeyFrame[2].movXsilla11 = -10;
-	KeyFrame[2].movYsilla11 = 35;
-	KeyFrame[2].movZsilla11 = 0;
-	KeyFrame[2].movXsilla12 = -10;
-	KeyFrame[2].movYsilla12 = 45;
-	KeyFrame[2].movZsilla12 = 0;
-	KeyFrame[2].movXsilla13 = -10;
-	KeyFrame[2].movYsilla13 = -10;
-	KeyFrame[2].movZsilla13 = 0;
-	KeyFrame[2].movXsilla14 = -10;
-	KeyFrame[2].movYsilla14 = -20;
-	KeyFrame[2].movZsilla14 = 0;
-	KeyFrame[2].movXsilla15 = -10;
-	KeyFrame[2].movYsilla15 = -33;
-	KeyFrame[2].movZsilla15 = 0;
-	KeyFrame[2].movXsilla16 = -10;
-	KeyFrame[2].movYsilla16 = -43;
-	KeyFrame[2].movZsilla16 = 0;
-	KeyFrame[2].movXsilla17 = -35;
-	KeyFrame[2].movYsilla17 = 13;
-	KeyFrame[2].movZsilla17 = 0;
-	KeyFrame[2].movXsilla18 = -35;
-	KeyFrame[2].movYsilla18 = 23;
-	KeyFrame[2].movZsilla18 = 0;
-	KeyFrame[2].movXsilla19 = -35;
-	KeyFrame[2].movYsilla19 = 35;
-	KeyFrame[2].movZsilla19 = 0;
-	KeyFrame[2].movXsilla20 = -35;
-	KeyFrame[2].movYsilla20 = 45;
-	KeyFrame[2].movZsilla20 = 0;
-	KeyFrame[2].movXsilla21 = -35;
-	KeyFrame[2].movYsilla21 = -10;
-	KeyFrame[2].movZsilla21 = 0;
-	KeyFrame[2].movXsilla22 = -35;
-	KeyFrame[2].movYsilla22 = -20;
-	KeyFrame[2].movZsilla22 = 0;
-	KeyFrame[2].movXsilla23 = -35;
-	KeyFrame[2].movYsilla23 = -33;
-	KeyFrame[2].movZsilla23 = 0;
-	KeyFrame[2].movXsilla24 = -35;
-	KeyFrame[2].movYsilla24 = -43;
-	KeyFrame[2].movZsilla24 = 0;
-	KeyFrame[2].giroZsillas = 340;
-	KeyFrame[2].scalesillas = 0;
-	KeyFrame[2].movXmesa1 = 30;
-	KeyFrame[2].movYmesa1 = 16;
-	KeyFrame[2].movZmesa1 = 0;
-	KeyFrame[2].movXmesa2 = 30;
-	KeyFrame[2].movYmesa2 = 38;
-	KeyFrame[2].movZmesa2 = 0;
-	KeyFrame[2].movXmesa3 = 30;
-	KeyFrame[2].movYmesa3 = -16;
-	KeyFrame[2].movZmesa3 = 0;
-	KeyFrame[2].movXmesa4 = 30;
-	KeyFrame[2].movYmesa4 = -38;
-	KeyFrame[2].movZmesa4 = 0;
-	KeyFrame[2].movXmesa5 = 5;
-	KeyFrame[2].movYmesa5 = 16;
-	KeyFrame[2].movZmesa5 = 0;
-	KeyFrame[2].movXmesa6 = 5;
-	KeyFrame[2].movYmesa6 = 38;
-	KeyFrame[2].movZmesa6 = 0;
-	KeyFrame[2].movXmesa7 = 5;
-	KeyFrame[2].movYmesa7 = -16;
-	KeyFrame[2].movZmesa7 = 0;
-	KeyFrame[2].movXmesa8 = 5;
-	KeyFrame[2].movYmesa8 = -38;
-	KeyFrame[2].movZmesa8 = 0;
-	KeyFrame[2].movXmesa9 = -20;
-	KeyFrame[2].movYmesa9 = 16;
-	KeyFrame[2].movZmesa9 = 0;
-	KeyFrame[2].movXmesa10 = -20;
-	KeyFrame[2].movYmesa10 = 38;
-	KeyFrame[2].movZmesa10 = 0;
-	KeyFrame[2].movXmesa11 = -20;
-	KeyFrame[2].movYmesa11 = -16;
-	KeyFrame[2].movZmesa11 = 0;
-	KeyFrame[2].movXmesa12 = -20;
-	KeyFrame[2].movYmesa12 = -38;
-	KeyFrame[2].movZmesa12 = 0;
-	KeyFrame[2].giroZmesas = 270;
-	KeyFrame[2].scaleXmesas = 19;
-	KeyFrame[2].scaleYmesas = 15;
-	KeyFrame[2].scaleZmesas = 16;
-	KeyFrame[2].movXdisplay1 = 24;
-	KeyFrame[2].movYdisplay1 = 16;
-	KeyFrame[2].movZdisplay1 = 13;
-	KeyFrame[2].movXdisplay2 = 24;
-	KeyFrame[2].movYdisplay2 = 39;
-	KeyFrame[2].movZdisplay2 = 13;
-	KeyFrame[2].movXdisplay3 = 24;
-	KeyFrame[2].movYdisplay3 = -16;
-	KeyFrame[2].movZdisplay3 = 13;
-	KeyFrame[2].movXdisplay4 = 24;
-	KeyFrame[2].movYdisplay4 = -39;
-	KeyFrame[2].movZdisplay4 = 13;
-	KeyFrame[2].movXdisplay5 = -1;
-	KeyFrame[2].movYdisplay5 = 16;
-	KeyFrame[2].movZdisplay5 = 13;
-	KeyFrame[2].movXdisplay6 = -1;
-	KeyFrame[2].movYdisplay6 = 38;
-	KeyFrame[2].movZdisplay6 = 13;
-	KeyFrame[2].movXdisplay7 = -1;
-	KeyFrame[2].movYdisplay7 = -16;
-	KeyFrame[2].movZdisplay7 = 13;
-	KeyFrame[2].movXdisplay8 = -1;
-	KeyFrame[2].movYdisplay8 = -39;
-	KeyFrame[2].movZdisplay8 = 13;
-	KeyFrame[2].movXdisplay9 = -26;
-	KeyFrame[2].movYdisplay9 = 16;
-	KeyFrame[2].movZdisplay9 = 13;
-	KeyFrame[2].movXdisplay10 = -26;
-	KeyFrame[2].movYdisplay10 = 39;
-	KeyFrame[2].movZdisplay10 = 13;
-	KeyFrame[2].movXdisplay11 = -26;
-	KeyFrame[2].movYdisplay11 = -16;
-	KeyFrame[2].movZdisplay11 = 13;
-	KeyFrame[2].movXdisplay12 = -26;
-	KeyFrame[2].movYdisplay12 = -39;
-	KeyFrame[2].movZdisplay12 = 13;
-	KeyFrame[2].giroZdisplay = 270;
-	KeyFrame[2].scaledisplay = 2.5;
-	KeyFrame[2].movXpccase1 = 24;
-	KeyFrame[2].movYpccase1 = 25;
-	KeyFrame[2].movZpccase1 = 16;
-	KeyFrame[2].movXpccase2 = 24;
-	KeyFrame[2].movYpccase2 = 30;
-	KeyFrame[2].movZpccase2 = 16;
-	KeyFrame[2].movXpccase3 = 24;
-	KeyFrame[2].movYpccase3 = -25;
-	KeyFrame[2].movZpccase3 = 16;
-	KeyFrame[2].movXpccase4 = 24;
-	KeyFrame[2].movYpccase4 = -30;
-	KeyFrame[2].movZpccase4 = 16;
-	KeyFrame[2].movXpccase5 = -1;
-	KeyFrame[2].movYpccase5 = 25;
-	KeyFrame[2].movZpccase5 = 16;
-	KeyFrame[2].movXpccase6 = -1;
-	KeyFrame[2].movYpccase6 = 30;
-	KeyFrame[2].movZpccase6 = 16;
-	KeyFrame[2].movXpccase7 = -1;
-	KeyFrame[2].movYpccase7 = -25;
-	KeyFrame[2].movZpccase7 = 16;
-	KeyFrame[2].movXpccase8 = -1;
-	KeyFrame[2].movYpccase8 = -30;
-	KeyFrame[2].movZpccase8 = 16;
-	KeyFrame[2].movXpccase9 = -26;
-	KeyFrame[2].movYpccase9 = 25;
-	KeyFrame[2].movZpccase9 = 16;
-	KeyFrame[2].movXpccase10 = -26;
-	KeyFrame[2].movYpccase10 = 30;
-	KeyFrame[2].movZpccase10 = 16;
-	KeyFrame[2].movXpccase11 = -26;
-	KeyFrame[2].movYpccase11 = -25;
-	KeyFrame[2].movZpccase11 = 16;
-	KeyFrame[2].movXpccase12 = -26;
-	KeyFrame[2].movYpccase12 = -30;
-	KeyFrame[2].movZpccase12 = 16;
-	KeyFrame[2].giroZpccases = 180;
-	KeyFrame[2].scalepccases = 2.5;
+	ModelAnim animacionPersonaje("resources/objects/Personaje1/Arm.dae");
+	animacionPersonaje.initShaders(animShader.ID);
+	ModelAnim remyCaminando("resources/objects/Remy/Remy.dae");////
+	remyCaminando.initShaders(animShader.ID);/////
+///
 
-	// Frame Index = 3
-	KeyFrame[3].movXsilla1 = 16;
-	KeyFrame[3].movYsilla1 = 13;
-	KeyFrame[3].movZsilla1 = 0;
-	KeyFrame[3].movXsilla2 = 16;
-	KeyFrame[3].movYsilla2 = 23;
-	KeyFrame[3].movZsilla2 = 0;
-	KeyFrame[3].movXsilla3 = 16;
-	KeyFrame[3].movYsilla3 = 35;
-	KeyFrame[3].movZsilla3 = 0;
-	KeyFrame[3].movXsilla4 = 16;
-	KeyFrame[3].movYsilla4 = 45;
-	KeyFrame[3].movZsilla4 = 0;
-	KeyFrame[3].movXsilla5 = 16;
-	KeyFrame[3].movYsilla5 = -10;
-	KeyFrame[3].movZsilla5 = 0;
-	KeyFrame[3].movXsilla6 = 16;
-	KeyFrame[3].movYsilla6 = -20;
-	KeyFrame[3].movZsilla6 = 0;
-	KeyFrame[3].movXsilla7 = 16;
-	KeyFrame[3].movYsilla7 = -33;
-	KeyFrame[3].movZsilla7 = 0;
-	KeyFrame[3].movXsilla8 = 16;
-	KeyFrame[3].movYsilla8 = -43;
-	KeyFrame[3].movZsilla8 = 0;
-	KeyFrame[3].movXsilla9 = -10;
-	KeyFrame[3].movYsilla9 = 13;
-	KeyFrame[3].movZsilla9 = 0;
-	KeyFrame[3].movXsilla10 = -10;
-	KeyFrame[3].movYsilla10 = 23;
-	KeyFrame[3].movZsilla10 = 0;
-	KeyFrame[3].movXsilla11 = -10;
-	KeyFrame[3].movYsilla11 = 35;
-	KeyFrame[3].movZsilla11 = 0;
-	KeyFrame[3].movXsilla12 = -10;
-	KeyFrame[3].movYsilla12 = 45;
-	KeyFrame[3].movZsilla12 = 0;
-	KeyFrame[3].movXsilla13 = -10;
-	KeyFrame[3].movYsilla13 = -10;
-	KeyFrame[3].movZsilla13 = 0;
-	KeyFrame[3].movXsilla14 = -10;
-	KeyFrame[3].movYsilla14 = -20;
-	KeyFrame[3].movZsilla14 = 0;
-	KeyFrame[3].movXsilla15 = -10;
-	KeyFrame[3].movYsilla15 = -33;
-	KeyFrame[3].movZsilla15 = 0;
-	KeyFrame[3].movXsilla16 = -10;
-	KeyFrame[3].movYsilla16 = -43;
-	KeyFrame[3].movZsilla16 = 0;
-	KeyFrame[3].movXsilla17 = -35;
-	KeyFrame[3].movYsilla17 = 13;
-	KeyFrame[3].movZsilla17 = 0;
-	KeyFrame[3].movXsilla18 = -35;
-	KeyFrame[3].movYsilla18 = 23;
-	KeyFrame[3].movZsilla18 = 0;
-	KeyFrame[3].movXsilla19 = -35;
-	KeyFrame[3].movYsilla19 = 35;
-	KeyFrame[3].movZsilla19 = 0;
-	KeyFrame[3].movXsilla20 = -35;
-	KeyFrame[3].movYsilla20 = 45;
-	KeyFrame[3].movZsilla20 = 0;
-	KeyFrame[3].movXsilla21 = -35;
-	KeyFrame[3].movYsilla21 = -10;
-	KeyFrame[3].movZsilla21 = 0;
-	KeyFrame[3].movXsilla22 = -35;
-	KeyFrame[3].movYsilla22 = -20;
-	KeyFrame[3].movZsilla22 = 0;
-	KeyFrame[3].movXsilla23 = -35;
-	KeyFrame[3].movYsilla23 = -33;
-	KeyFrame[3].movZsilla23 = 0;
-	KeyFrame[3].movXsilla24 = -35;
-	KeyFrame[3].movYsilla24 = -43;
-	KeyFrame[3].movZsilla24 = 0;
-	KeyFrame[3].giroZsillas = 340;
-	KeyFrame[3].scalesillas = 0;
-	KeyFrame[3].movXmesa1 = 30;
-	KeyFrame[3].movYmesa1 = 16;
-	KeyFrame[3].movZmesa1 = 0;
-	KeyFrame[3].movXmesa2 = 30;
-	KeyFrame[3].movYmesa2 = 38;
-	KeyFrame[3].movZmesa2 = 0;
-	KeyFrame[3].movXmesa3 = 30;
-	KeyFrame[3].movYmesa3 = -16;
-	KeyFrame[3].movZmesa3 = 0;
-	KeyFrame[3].movXmesa4 = 30;
-	KeyFrame[3].movYmesa4 = -38;
-	KeyFrame[3].movZmesa4 = 0;
-	KeyFrame[3].movXmesa5 = 5;
-	KeyFrame[3].movYmesa5 = 16;
-	KeyFrame[3].movZmesa5 = 0;
-	KeyFrame[3].movXmesa6 = 5;
-	KeyFrame[3].movYmesa6 = 38;
-	KeyFrame[3].movZmesa6 = 0;
-	KeyFrame[3].movXmesa7 = 5;
-	KeyFrame[3].movYmesa7 = -16;
-	KeyFrame[3].movZmesa7 = 0;
-	KeyFrame[3].movXmesa8 = 5;
-	KeyFrame[3].movYmesa8 = -38;
-	KeyFrame[3].movZmesa8 = 0;
-	KeyFrame[3].movXmesa9 = -20;
-	KeyFrame[3].movYmesa9 = 16;
-	KeyFrame[3].movZmesa9 = 0;
-	KeyFrame[3].movXmesa10 = -20;
-	KeyFrame[3].movYmesa10 = 38;
-	KeyFrame[3].movZmesa10 = 0;
-	KeyFrame[3].movXmesa11 = -20;
-	KeyFrame[3].movYmesa11 = -16;
-	KeyFrame[3].movZmesa11 = 0;
-	KeyFrame[3].movXmesa12 = -20;
-	KeyFrame[3].movYmesa12 = -38;
-	KeyFrame[3].movZmesa12 = 0;
-	KeyFrame[3].giroZmesas = 270;
-	KeyFrame[3].scaleXmesas = 0;
-	KeyFrame[3].scaleYmesas = -2;
-	KeyFrame[3].scaleZmesas = 0;
-	KeyFrame[3].movXdisplay1 = 24;
-	KeyFrame[3].movYdisplay1 = 16;
-	KeyFrame[3].movZdisplay1 = 13;
-	KeyFrame[3].movXdisplay2 = 24;
-	KeyFrame[3].movYdisplay2 = 39;
-	KeyFrame[3].movZdisplay2 = 13;
-	KeyFrame[3].movXdisplay3 = 24;
-	KeyFrame[3].movYdisplay3 = -16;
-	KeyFrame[3].movZdisplay3 = 13;
-	KeyFrame[3].movXdisplay4 = 24;
-	KeyFrame[3].movYdisplay4 = -39;
-	KeyFrame[3].movZdisplay4 = 13;
-	KeyFrame[3].movXdisplay5 = -1;
-	KeyFrame[3].movYdisplay5 = 16;
-	KeyFrame[3].movZdisplay5 = 13;
-	KeyFrame[3].movXdisplay6 = -1;
-	KeyFrame[3].movYdisplay6 = 38;
-	KeyFrame[3].movZdisplay6 = 13;
-	KeyFrame[3].movXdisplay7 = -1;
-	KeyFrame[3].movYdisplay7 = -16;
-	KeyFrame[3].movZdisplay7 = 13;
-	KeyFrame[3].movXdisplay8 = -1;
-	KeyFrame[3].movYdisplay8 = -39;
-	KeyFrame[3].movZdisplay8 = 13;
-	KeyFrame[3].movXdisplay9 = -26;
-	KeyFrame[3].movYdisplay9 = 16;
-	KeyFrame[3].movZdisplay9 = 13;
-	KeyFrame[3].movXdisplay10 = -26;
-	KeyFrame[3].movYdisplay10 = 39;
-	KeyFrame[3].movZdisplay10 = 13;
-	KeyFrame[3].movXdisplay11 = -26;
-	KeyFrame[3].movYdisplay11 = -16;
-	KeyFrame[3].movZdisplay11 = 13;
-	KeyFrame[3].movXdisplay12 = -26;
-	KeyFrame[3].movYdisplay12 = -39;
-	KeyFrame[3].movZdisplay12 = 13;
-	KeyFrame[3].giroZdisplay = 270;
-	KeyFrame[3].scaledisplay = 2.5;
-	KeyFrame[3].movXpccase1 = 24;
-	KeyFrame[3].movYpccase1 = 25;
-	KeyFrame[3].movZpccase1 = 16;
-	KeyFrame[3].movXpccase2 = 24;
-	KeyFrame[3].movYpccase2 = 30;
-	KeyFrame[3].movZpccase2 = 16;
-	KeyFrame[3].movXpccase3 = 24;
-	KeyFrame[3].movYpccase3 = -25;
-	KeyFrame[3].movZpccase3 = 16;
-	KeyFrame[3].movXpccase4 = 24;
-	KeyFrame[3].movYpccase4 = -30;
-	KeyFrame[3].movZpccase4 = 16;
-	KeyFrame[3].movXpccase5 = -1;
-	KeyFrame[3].movYpccase5 = 25;
-	KeyFrame[3].movZpccase5 = 16;
-	KeyFrame[3].movXpccase6 = -1;
-	KeyFrame[3].movYpccase6 = 30;
-	KeyFrame[3].movZpccase6 = 16;
-	KeyFrame[3].movXpccase7 = -1;
-	KeyFrame[3].movYpccase7 = -25;
-	KeyFrame[3].movZpccase7 = 16;
-	KeyFrame[3].movXpccase8 = -1;
-	KeyFrame[3].movYpccase8 = -30;
-	KeyFrame[3].movZpccase8 = 16;
-	KeyFrame[3].movXpccase9 = -26;
-	KeyFrame[3].movYpccase9 = 25;
-	KeyFrame[3].movZpccase9 = 16;
-	KeyFrame[3].movXpccase10 = -26;
-	KeyFrame[3].movYpccase10 = 30;
-	KeyFrame[3].movZpccase10 = 16;
-	KeyFrame[3].movXpccase11 = -26;
-	KeyFrame[3].movYpccase11 = -25;
-	KeyFrame[3].movZpccase11 = 16;
-	KeyFrame[3].movXpccase12 = -26;
-	KeyFrame[3].movYpccase12 = -30;
-	KeyFrame[3].movZpccase12 = 16;
-	KeyFrame[3].giroZpccases = 180;
-	KeyFrame[3].scalepccases = 2.5;
 
+	//Para objetos con animacion
+
+	//Inicialización de KeyFrames
+	/*/for (int i = 0; i < MAX_FRAMES; i++)
+	{
+		KeyFrame[i].posX = 0;
+		KeyFrame[i].posY = 0;
+		KeyFrame[i].posZ = 0;
+		KeyFrame[i].rotRodIzq = 0;
+		KeyFrame[i].giroMonito = 0;
+	}*/
+
+	KeyFrame[0].posX = 0;							//	CAMBIO EN EL CODIGO
+	KeyFrame[0].posY = 0;							//	CAMBIO EN EL CODIGO	
+	KeyFrame[0].posZ = 0;							//	CAMBIO EN EL CODIGO
+	KeyFrame[0].rotRodIzq = 0;						//	CAMBIO EN EL CODIGO	
+	KeyFrame[0].giroMonito = 0;						//	CAMBIO EN EL CODIGO	
+	KeyFrame[0].giroBrazoDerecho = 0;				//	CAMBIO EN EL CODIGO
+
+	KeyFrame[1].posX = 20.0f;						//	CAMBIO EN EL CODIGO
+	KeyFrame[1].posY = 15.0f;						//	CAMBIO EN EL CODIGO
+	KeyFrame[1].posZ = 0;							//	CAMBIO EN EL CODIGO
+	KeyFrame[1].rotRodIzq = 0;						//	CAMBIO EN EL CODIGO
+	KeyFrame[1].giroMonito = 0;						//	CAMBIO EN EL CODIGO
+	KeyFrame[1].giroBrazoDerecho = 0;				//	CAMBIO EN EL CODIGO
+
+	KeyFrame[2].posX = 20.0f;						//	CAMBIO EN EL CODIGO
+	KeyFrame[2].posY = 28.0f;						//	CAMBIO EN EL CODIGO
+	KeyFrame[2].posZ = 10.0f;						//	CAMBIO EN EL CODIGO
+	KeyFrame[2].rotRodIzq = 5.0f;					//	CAMBIO EN EL CODIGO
+	KeyFrame[2].giroMonito = 90.0f;					//	CAMBIO EN EL CODIGO
+	KeyFrame[2].giroBrazoDerecho = 75.0f;			//	CAMBIO EN EL CODIGO
+
+	KeyFrame[3].posX = 0.0f;						//	CAMBIO EN EL CODIGO
+	KeyFrame[3].posY = 0.0f;						//	CAMBIO EN EL CODIGO	
+	KeyFrame[3].posZ = 0.0f;						//	CAMBIO EN EL CODIGO
+	KeyFrame[3].rotRodIzq = 0.0f;					//	CAMBIO EN EL CODIGO
+	KeyFrame[3].giroMonito = 0.0f;					//	CAMBIO EN EL CODIGO
+	KeyFrame[3].giroBrazoDerecho = -90.0f;			//	CAMBIO EN EL CODIGO
+
+	KeyFrame[4].posX = -20.0f;
+	KeyFrame[4].posY = 28.0f;
+	KeyFrame[4].posZ = -10.0f;
+	KeyFrame[4].rotRodIzq = -15.0f;					//	CAMBIO EN EL CODIGO
+	KeyFrame[4].giroMonito = -90.0f;				//	CAMBIO EN EL CODIGO
+	KeyFrame[4].giroBrazoDerecho = 75.0f;			//	CAMBIO EN EL CODIGO
+
+	KeyFrame[5].posX = 0;							//	CAMBIO EN EL CODIGO
+	KeyFrame[5].posY = 0;							//	CAMBIO EN EL CODIGO
+	KeyFrame[5].posZ = 0;							//	CAMBIO EN EL CODIGO
+	KeyFrame[5].rotRodIzq = 0;						//	CAMBIO EN EL CODIGO
+	KeyFrame[5].giroMonito = 0;						//	CAMBIO EN EL CODIGO
+	KeyFrame[5].giroBrazoDerecho = -90.0f;			//	CAMBIO EN EL CODIGO
 
 	// create transformations and Projection
 	glm::mat4 modelOp = glm::mat4(1.0f);		// initialize Matrix, Use this matrix for individual models
-	glm::mat4 viewOp = glm::mat4(1.0f);			//Use this matrix for ALL models
+	glm::mat4 viewOp = glm::mat4(1.0f);		//Use this matrix for ALL models
 	glm::mat4 projectionOp = glm::mat4(1.0f);	//This matrix is for Projection
-	//	glm::mat4 TempPecho = glm::mat4(1.0f);
 
-	glm::mat4 Cesped = glm::mat4(1.0f);
-	glm::mat4 Piso = glm::mat4(1.0f);
-	glm::mat4 Pared = glm::mat4(1.0f);
+	glm::mat4 tmpCuerpoAquaman = glm::mat4(1.0f);		//////
 
-	glm::mat4 tmpPokeball = glm::mat4(1.0f); // Matriz temporal para hacer la animacion de la pokeball 
+	// ------------------- INIT PELOTA -------------------
+	ballX = poolMinX;
+	ballZ = poolMinZ;
+	ballY = ballBaseY;
+	ballEdge = 0;
+	ballRot = 0.0f;
+	bouncePhase = 0.0f;
 
-	//Use "projection" in order to change how we see the information
-	//projectionOp = glm::perspective(glm::radians(45.0f), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 10000.0f);
 
 	// render loop
-	// While the windows is not closed
+	// -----------
 	while (!glfwWindowShouldClose(window))
 	{
-		// input
-		// -----
-		//my_input(window);
-
 		skyboxShader.setInt("skybox", 0);
 
 		// per-frame time logic
 		// --------------------
 		lastFrame = SDL_GetTicks();
 
+		// input
+		// -----
+		//my_input(window);
 		animate();
 
 		// render
-		// Background color
+		// ------
 		glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
+		// don't forget to enable shader before setting uniforms
+		//Setup shader for static models
 		staticShader.use();
 		//Setup Advanced Lights
 		staticShader.setVec3("viewPos", camera.Position);
 		staticShader.setVec3("dirLight.direction", lightDirection);
-		staticShader.setVec3("dirLight.ambient", ambientColor);
-		staticShader.setVec3("dirLight.diffuse", diffuseColor);
+
+		if (pulseLights)
+		{
+			float t = (sinf(SDL_GetTicks() * pulseSpeed) + 1.0f) * 0.5f; // 0..1
+			float I = pulseMin + t * (pulseMax - pulseMin);
+
+			staticShader.setVec3("dirLight.ambient", ambientColor * I);
+			staticShader.setVec3("dirLight.diffuse", diffuseColor * I);
+		}
+		else
+		{
+			staticShader.setVec3("dirLight.ambient", ambientColor);
+			staticShader.setVec3("dirLight.diffuse", diffuseColor);
+		}
+
 		staticShader.setVec3("dirLight.specular", glm::vec3(0.6f, 0.6f, 0.6f));
+
 
 		staticShader.setVec3("pointLight[0].position", lightPosition);
 		staticShader.setVec3("pointLight[0].ambient", glm::vec3(0.0f, 0.0f, 0.0f));
@@ -2930,7 +950,7 @@ int main()
 		glm::mat4 tmp = glm::mat4(1.0f);
 		// view/projection transformations
 		//glm::mat4 projection = glm::perspective(glm::radians(camera.Zoom), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 10000.0f);
-		projectionOp = glm::perspective(glm::radians(camera.Zoom), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100000.0f);
+		projectionOp = glm::perspective(glm::radians(camera.Zoom), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 10000.0f);
 		viewOp = camera.GetViewMatrix();
 		staticShader.setMat4("projection", projectionOp);
 		staticShader.setMat4("view", viewOp);
@@ -2945,544 +965,253 @@ int main()
 		myShader.setMat4("view", viewOp);
 		// note: currently we set the projection matrix each frame, but since the projection matrix rarely changes it's often best practice to set it outside the main loop only once.
 		myShader.setMat4("projection", projectionOp);
-
 		/**********/
 
-		//Model
 
+		// -------------------------------------------------------------------------------------------------------------------------
+		// Personaje Animacion
+		// -------------------------------------------------------------------------------------------------------------------------
+		//Remember to activate the shader with the animation
+		animShader.use(); //encargado de dibujar modelos  7777
+		animShader.setMat4("projection", projectionOp);
+		animShader.setMat4("view", viewOp);
+
+		animShader.setVec3("material.specular", glm::vec3(0.5f));
+		animShader.setFloat("material.shininess", 32.0f);
+		animShader.setVec3("light.ambient", ambientColor);
+		animShader.setVec3("light.diffuse", diffuseColor);
+		animShader.setVec3("light.specular", 1.0f, 1.0f, 1.0f);
+		animShader.setVec3("light.direction", lightDirection);
+		animShader.setVec3("viewPos", camera.Position);
+
+		modelOp = glm::translate(glm::mat4(1.0f), glm::vec3(-10.0f, 20.0f, 262.3f)); // translate it down so it's at the center of the scene
+		modelOp = glm::scale(modelOp, glm::vec3(0.06f));	// it's a bit too big for our scene, so scale it down
+		modelOp = glm::rotate(modelOp, glm::radians(180.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+		animShader.setMat4("model", modelOp);
+		animacionPersonaje.Draw(animShader);
+
+		// -------------------------------------------------------------------------------------------------------------------------
+		// Segundo Personaje Animacion
+		// -------------------------------------------------------------------------------------------------------------------------
+		modelOp = glm::translate(glm::mat4(1.0f), glm::vec3(140.0f, 23.0f, 40.0f));  ///
+		modelOp = glm::scale(modelOp, glm::vec3(0.06f));                           ///
+		animShader.setMat4("model", modelOp);                                      ///
+		remyCaminando.Draw(animShader);                                             ///
+
+
+		// -------------------------------------------------------------------------------------------------------------------------
+		// Escenario Primitivas
+		// -------------------------------------------------------------------------------------------------------------------------
+		myShader.use();
+
+		//Tener Piso como referencia
+		glBindVertexArray(VAO[2]);
 		glBindVertexArray(0);
+		// ------------------------------------------------------------------------------------------------------------------------
+		// Termina Escenario Primitivas
+		// -------------------------------------------------------------------------------------------------------------------------
 
+		// -------------------------------------------------------------------------------------------------------------------------
+		// Escenario
+		// -------------------------------------------------------------------------------------------------------------------------
 		staticShader.use();
 		staticShader.setMat4("projection", projectionOp);
 		staticShader.setMat4("view", viewOp);
 
-		modelOp = glm::translate(glm::mat4(1.0f), glm::vec3(90.0f, 10.0f, 150.0f));
-		modelOp = glm::scale(modelOp, glm::vec3(5.0f));	// it's a bit too big for our scene, so scale it down	
-		staticShader.setMat4("model", modelOp);
-		//Fachada_Q.Draw(staticShader);
 
-		modelOp = glm::translate(glm::mat4(1.0f), glm::vec3(1.0f, 1.0f, 1.0f));
-		modelOp = glm::scale(modelOp, glm::vec3(1.0f));	// it's a bit too big for our scene, so scale it down	
-		staticShader.setMat4("model", modelOp);
-		alberca.Draw(staticShader);
-
-		//LABORATORIO DE CISCO
-		modelOp = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 0.0f, 0.0f));
-		modelOp = glm::scale(modelOp, glm::vec3(1.0f));	// it's a bit too big for our scene, so scale it down	
-		staticShader.setMat4("model", modelOp);
-		//Cisco.Draw(staticShader);	//Ubicacion aproximadamente de la puerta es 45,0,-30
+		///////////////////////
 
-		modelOp = glm::translate(glm::mat4(1.0f), glm::vec3(49.5f, 25.0f, 13.0f));
-		modelOp = glm::scale(modelOp, glm::vec3(10.0f));	// it's a bit too big for our scene, so scale it down	
-		staticShader.setMat4("model", modelOp);
-		//Pizarron.Draw(staticShader);
-
-		/*
-				Sillas de las primera fila primera seccion
-		*/
-
-		modelOp = glm::translate(glm::mat4(1.0f), glm::vec3(movXsilla1, movZsilla1, movYsilla1));
-		modelOp = glm::rotate(modelOp, glm::radians(giroZsillas), glm::vec3(0.0f, 1.0f, 0.0f));
-		modelOp = glm::scale(modelOp, glm::vec3(scalesillas));	// it's a bit too big for our scene, so scale it down
-		staticShader.setMat4("model", modelOp);
-		//PC_Chair.Draw(staticShader);
-
-		modelOp = glm::translate(glm::mat4(1.0f), glm::vec3(movXsilla2, movZsilla1, movYsilla2));
-		modelOp = glm::rotate(modelOp, glm::radians(giroZsillas), glm::vec3(0.0f, 1.0f, 0.0f));
-		modelOp = glm::scale(modelOp, glm::vec3(scalesillas));	// it's a bit too big for our scene, so scale it down
-		staticShader.setMat4("model", modelOp);
-		//PC_Chair.Draw(staticShader);
-
-		modelOp = glm::translate(glm::mat4(1.0f), glm::vec3(movXsilla3, movZsilla1, movYsilla3));
-		modelOp = glm::rotate(modelOp, glm::radians(giroZsillas), glm::vec3(0.0f, 1.0f, 0.0f));
-		modelOp = glm::scale(modelOp, glm::vec3(scalesillas));	// it's a bit too big for our scene, so scale it down
-		staticShader.setMat4("model", modelOp);
-		//PC_Chair.Draw(staticShader);
-
-		modelOp = glm::translate(glm::mat4(1.0f), glm::vec3(movXsilla4, movZsilla1, movYsilla4));
-		modelOp = glm::rotate(modelOp, glm::radians(giroZsillas), glm::vec3(0.0f, 1.0f, 0.0f));
-		modelOp = glm::scale(modelOp, glm::vec3(scalesillas));	// it's a bit too big for our scene, so scale it down
-		staticShader.setMat4("model", modelOp);
-		//PC_Chair.Draw(staticShader);
-
-		/*
-				Mesas de la primera fila primera seccion
-		*/
-
-		modelOp = glm::translate(glm::mat4(1.0f), glm::vec3(movXmesa1, movZmesa1, movYmesa1));
-		modelOp = glm::rotate(modelOp, glm::radians(giroZmesas), glm::vec3(0.0f, 1.0f, 0.0f));
-		modelOp = glm::scale(modelOp, glm::vec3(scaleXmesas, scaleZmesas, scaleYmesas));	// it's a bit too big for our scene, so scale it down
-		staticShader.setMat4("model", modelOp);
-		//Desk.Draw(staticShader);
-
-		modelOp = glm::translate(glm::mat4(1.0f), glm::vec3(movXmesa2, movZmesa2, movYmesa2));
-		modelOp = glm::rotate(modelOp, glm::radians(giroZmesas), glm::vec3(0.0f, 1.0f, 0.0f));
-		modelOp = glm::scale(modelOp, glm::vec3(scaleXmesas, scaleZmesas, scaleYmesas));	// it's a bit too big for our scene, so scale it down
+		modelOp = glm::mat4(1.0f);
+		modelOp = glm::translate(modelOp, glm::vec3(0.0f, waterOffsetY, 0.0f)); // <-- AQUÍ
+		modelOp = glm::scale(modelOp, glm::vec3(10.0f));
 		staticShader.setMat4("model", modelOp);
-		//Desk.Draw(staticShader);
-
-		/*
-			Display
-		*/
-
-		modelOp = glm::translate(glm::mat4(1.0f), glm::vec3(movXdisplay1, movZdisplay1, movYdisplay1));
-		modelOp = glm::rotate(modelOp, glm::radians(giroZdisplay), glm::vec3(0.0f, 1.0f, 0.0f));
-		modelOp = glm::scale(modelOp, glm::vec3(scaledisplay));	// it's a bit too big for our scene, so scale it down
-		staticShader.setMat4("model", modelOp);
-		//Display.Draw(staticShader);
-
-		modelOp = glm::translate(glm::mat4(1.0f), glm::vec3(movXdisplay2, movZdisplay2, movYdisplay2));
-		modelOp = glm::rotate(modelOp, glm::radians(giroZdisplay), glm::vec3(0.0f, 1.0f, 0.0f));
-		modelOp = glm::scale(modelOp, glm::vec3(scaledisplay));	// it's a bit too big for our scene, so scale it down
-		staticShader.setMat4("model", modelOp);
-		//Display.Draw(staticShader);
-
-		/*
-			PC_Case 1.1
-		*/
-
-		modelOp = glm::translate(glm::mat4(1.0f), glm::vec3(movXpccase1, movZpccase1, movYpccase1));
-		modelOp = glm::rotate(modelOp, glm::radians(giroZpccases), glm::vec3(0.0f, 1.0f, 0.0f));
-		modelOp = glm::scale(modelOp, glm::vec3(scalepccases));	// it's a bit too big for our scene, so scale it down
-		staticShader.setMat4("model", modelOp);
-		//PC_Case.Draw(staticShader);
-
-		modelOp = glm::translate(glm::mat4(1.0f), glm::vec3(movXpccase2, movZpccase2, movYpccase2));
-		modelOp = glm::rotate(modelOp, glm::radians(giroZpccases), glm::vec3(0.0f, 1.0f, 0.0f));
-		modelOp = glm::scale(modelOp, glm::vec3(scalepccases));	// it's a bit too big for our scene, so scale it down
-		staticShader.setMat4("model", modelOp);
-		//PC_Case.Draw(staticShader);
+		agua.Draw(staticShader);
 
-		/*
-			Mouse 1.1
-		*/
 
 
-		/*
-				Sillas de las primera fila segunda seccion
-		*/
 
-		modelOp = glm::translate(glm::mat4(1.0f), glm::vec3(movXsilla5, movZsilla5, movYsilla5));
-		modelOp = glm::rotate(modelOp, glm::radians(giroZsillas), glm::vec3(0.0f, 1.0f, 0.0f));
-		modelOp = glm::scale(modelOp, glm::vec3(scalesillas));	// it's a bit too big for our scene, so scale it down
-		staticShader.setMat4("model", modelOp);
-		//PC_Chair.Draw(staticShader);
-
-		modelOp = glm::translate(glm::mat4(1.0f), glm::vec3(movXsilla6, movZsilla6, movYsilla6));
-		modelOp = glm::rotate(modelOp, glm::radians(giroZsillas), glm::vec3(0.0f, 1.0f, 0.0f));
-		modelOp = glm::scale(modelOp, glm::vec3(scalesillas));	// it's a bit too big for our scene, so scale it down
-		staticShader.setMat4("model", modelOp);
-		//PC_Chair.Draw(staticShader);
-
-		modelOp = glm::translate(glm::mat4(1.0f), glm::vec3(movXsilla7, movZsilla7, movYsilla7));
-		modelOp = glm::rotate(modelOp, glm::radians(giroZsillas), glm::vec3(0.0f, 1.0f, 0.0f));
-		modelOp = glm::scale(modelOp, glm::vec3(scalesillas));	// it's a bit too big for our scene, so scale it down
-		staticShader.setMat4("model", modelOp);
-		//PC_Chair.Draw(staticShader);
-
-		modelOp = glm::translate(glm::mat4(1.0f), glm::vec3(movXsilla8, movZsilla8, movYsilla8));
-		modelOp = glm::rotate(modelOp, glm::radians(giroZsillas), glm::vec3(0.0f, 1.0f, 0.0f));
-		modelOp = glm::scale(modelOp, glm::vec3(scalesillas));	// it's a bit too big for our scene, so scale it down
-		staticShader.setMat4("model", modelOp);
-		//PC_Chair.Draw(staticShader);
-
-		/*
-				Mesas de la primera fila segunda seccion
-		*/
-
-		modelOp = glm::translate(glm::mat4(1.0f), glm::vec3(movXmesa3, movZmesa3, movYmesa3));
-		modelOp = glm::rotate(modelOp, glm::radians(giroZmesas), glm::vec3(0.0f, 1.0f, 0.0f));
-		modelOp = glm::scale(modelOp, glm::vec3(scaleXmesas, scaleZmesas, scaleYmesas));	// it's a bit too big for our scene, so scale it down
-		staticShader.setMat4("model", modelOp);
-		//Desk.Draw(staticShader);
-
-		modelOp = glm::translate(glm::mat4(1.0f), glm::vec3(movXmesa4, movZmesa4, movYmesa4));
-		modelOp = glm::rotate(modelOp, glm::radians(giroZmesas), glm::vec3(0.0f, 1.0f, 0.0f));
-		modelOp = glm::scale(modelOp, glm::vec3(scaleXmesas, scaleZmesas, scaleYmesas));	// it's a bit too big for our scene, so scale it down
-		staticShader.setMat4("model", modelOp);
-		//Desk.Draw(staticShader);
-
-		/*
-			Display
-		*/
-
-		modelOp = glm::translate(glm::mat4(1.0f), glm::vec3(movXdisplay3, movZdisplay3, movYdisplay3));
-		modelOp = glm::rotate(modelOp, glm::radians(giroZdisplay), glm::vec3(0.0f, 1.0f, 0.0f));
-		modelOp = glm::scale(modelOp, glm::vec3(scaledisplay));	// it's a bit too big for our scene, so scale it down
-		staticShader.setMat4("model", modelOp);
-		//Display.Draw(staticShader);
-
-		modelOp = glm::translate(glm::mat4(1.0f), glm::vec3(movXdisplay4, movZdisplay4, movYdisplay4));
-		modelOp = glm::rotate(modelOp, glm::radians(giroZdisplay), glm::vec3(0.0f, 1.0f, 0.0f));
-		modelOp = glm::scale(modelOp, glm::vec3(scaledisplay));	// it's a bit too big for our scene, so scale it down
-		staticShader.setMat4("model", modelOp);
-		//Display.Draw(staticShader);
-
-		/*
-			PC_Case 1.2
-		*/
-
-		modelOp = glm::translate(glm::mat4(1.0f), glm::vec3(movXpccase3, movZpccase3, movYpccase3));
-		modelOp = glm::rotate(modelOp, glm::radians(giroZpccases), glm::vec3(0.0f, 1.0f, 0.0f));
-		modelOp = glm::scale(modelOp, glm::vec3(scalepccases));	// it's a bit too big for our scene, so scale it down
-		staticShader.setMat4("model", modelOp);
-		//PC_Case.Draw(staticShader);
-
-		modelOp = glm::translate(glm::mat4(1.0f), glm::vec3(movXpccase4, movZpccase4, movYpccase4));
-		modelOp = glm::rotate(modelOp, glm::radians(giroZpccases), glm::vec3(0.0f, 1.0f, 0.0f));
-		modelOp = glm::scale(modelOp, glm::vec3(scalepccases));	// it's a bit too big for our scene, so scale it down
-		staticShader.setMat4("model", modelOp);
-		//PC_Case.Draw(staticShader);
-
-		/*
-		Sillas de las segunda fila primera seccion
-		*/
-
-		modelOp = glm::translate(glm::mat4(1.0f), glm::vec3(movXsilla9, movZsilla9, movYsilla9));
-		modelOp = glm::rotate(modelOp, glm::radians(giroZsillas), glm::vec3(0.0f, 1.0f, 0.0f));
-		modelOp = glm::scale(modelOp, glm::vec3(scalesillas));	// it's a bit too big for our scene, so scale it down
-		staticShader.setMat4("model", modelOp);
-		//PC_Chair.Draw(staticShader);
-
-		modelOp = glm::translate(glm::mat4(1.0f), glm::vec3(movXsilla10, movZsilla10, movYsilla10));
-		modelOp = glm::rotate(modelOp, glm::radians(giroZsillas), glm::vec3(0.0f, 1.0f, 0.0f));
-		modelOp = glm::scale(modelOp, glm::vec3(scalesillas));	// it's a bit too big for our scene, so scale it down
-		staticShader.setMat4("model", modelOp);
-		//PC_Chair.Draw(staticShader);
-
-		modelOp = glm::translate(glm::mat4(1.0f), glm::vec3(movXsilla11, movZsilla11, movYsilla11));
-		modelOp = glm::rotate(modelOp, glm::radians(giroZsillas), glm::vec3(0.0f, 1.0f, 0.0f));
-		modelOp = glm::scale(modelOp, glm::vec3(scalesillas));	// it's a bit too big for our scene, so scale it down
-		staticShader.setMat4("model", modelOp);
-		//PC_Chair.Draw(staticShader);
-
-		modelOp = glm::translate(glm::mat4(1.0f), glm::vec3(movXsilla12, movZsilla12, movYsilla12));
-		modelOp = glm::rotate(modelOp, glm::radians(giroZsillas), glm::vec3(0.0f, 1.0f, 0.0f));
-		modelOp = glm::scale(modelOp, glm::vec3(scalesillas));	// it's a bit too big for our scene, so scale it down
-		staticShader.setMat4("model", modelOp);
-		//PC_Chair.Draw(staticShader);
-
-		/*
-			Mesas de la segunda fila primera seccion
-		*/
-
-		modelOp = glm::translate(glm::mat4(1.0f), glm::vec3(movXmesa5, movZmesa5, movYmesa5));
-		modelOp = glm::rotate(modelOp, glm::radians(giroZmesas), glm::vec3(0.0f, 1.0f, 0.0f));
-		modelOp = glm::scale(modelOp, glm::vec3(scaleXmesas, scaleZmesas, scaleYmesas));	// it's a bit too big for our scene, so scale it down
-		staticShader.setMat4("model", modelOp);
-		//Desk.Draw(staticShader);
-
-		modelOp = glm::translate(glm::mat4(1.0f), glm::vec3(movXmesa6, movZmesa6, movYmesa6));
-		modelOp = glm::rotate(modelOp, glm::radians(giroZmesas), glm::vec3(0.0f, 1.0f, 0.0f));
-		modelOp = glm::scale(modelOp, glm::vec3(scaleXmesas, scaleZmesas, scaleYmesas));	// it's a bit too big for our scene, so scale it down
-		staticShader.setMat4("model", modelOp);
-		//Desk.Draw(staticShader);
-
-		/*
-			Display 2.1
-		*/
-
-		modelOp = glm::translate(glm::mat4(1.0f), glm::vec3(movXdisplay5, movZdisplay5, movYdisplay5));
-		modelOp = glm::rotate(modelOp, glm::radians(giroZdisplay), glm::vec3(0.0f, 1.0f, 0.0f));
-		modelOp = glm::scale(modelOp, glm::vec3(scaledisplay));	// it's a bit too big for our scene, so scale it down
-		staticShader.setMat4("model", modelOp);
-		//Display.Draw(staticShader);
-
-		modelOp = glm::translate(glm::mat4(1.0f), glm::vec3(movXdisplay6, movZdisplay6, movYdisplay6));
-		modelOp = glm::rotate(modelOp, glm::radians(giroZdisplay), glm::vec3(0.0f, 1.0f, 0.0f));
-		modelOp = glm::scale(modelOp, glm::vec3(scaledisplay));	// it's a bit too big for our scene, so scale it down
-		staticShader.setMat4("model", modelOp);
-		//Display.Draw(staticShader);
-
-		/*
-			PC_Case
-		*/
-
-		modelOp = glm::translate(glm::mat4(1.0f), glm::vec3(movXpccase5, movZpccase5, movYpccase5));
-		modelOp = glm::rotate(modelOp, glm::radians(giroZpccases), glm::vec3(0.0f, 1.0f, 0.0f));
-		modelOp = glm::scale(modelOp, glm::vec3(scalepccases));	// it's a bit too big for our scene, so scale it down
-		staticShader.setMat4("model", modelOp);
-		//PC_Case.Draw(staticShader);
-
-		modelOp = glm::translate(glm::mat4(1.0f), glm::vec3(movXpccase6, movZpccase6, movYpccase6));
-		modelOp = glm::rotate(modelOp, glm::radians(giroZpccases), glm::vec3(0.0f, 1.0f, 0.0f));
-		modelOp = glm::scale(modelOp, glm::vec3(scalepccases));	// it's a bit too big for our scene, so scale it down
-		staticShader.setMat4("model", modelOp);
-		//PC_Case.Draw(staticShader);
-
-		/*
-		Sillas de las segunda fila segunda seccion
-		*/
-
-		modelOp = glm::translate(glm::mat4(1.0f), glm::vec3(movXsilla13, movZsilla13, movYsilla13));
-		modelOp = glm::rotate(modelOp, glm::radians(giroZsillas), glm::vec3(0.0f, 1.0f, 0.0f));
-		modelOp = glm::scale(modelOp, glm::vec3(scalesillas));	// it's a bit too big for our scene, so scale it down
-		staticShader.setMat4("model", modelOp);
-		//PC_Chair.Draw(staticShader);
-
-		modelOp = glm::translate(glm::mat4(1.0f), glm::vec3(movXsilla14, movZsilla14, movYsilla14));
-		modelOp = glm::rotate(modelOp, glm::radians(giroZsillas), glm::vec3(0.0f, 1.0f, 0.0f));
-		modelOp = glm::scale(modelOp, glm::vec3(scalesillas));	// it's a bit too big for our scene, so scale it down
-		staticShader.setMat4("model", modelOp);
-		//PC_Chair.Draw(staticShader);
-
-		modelOp = glm::translate(glm::mat4(1.0f), glm::vec3(movXsilla15, movZsilla15, movYsilla15));
-		modelOp = glm::rotate(modelOp, glm::radians(giroZsillas), glm::vec3(0.0f, 1.0f, 0.0f));
-		modelOp = glm::scale(modelOp, glm::vec3(scalesillas));	// it's a bit too big for our scene, so scale it down
-		staticShader.setMat4("model", modelOp);
-		//PC_Chair.Draw(staticShader);
-
-		modelOp = glm::translate(glm::mat4(1.0f), glm::vec3(movXsilla16, movZsilla16, movYsilla16));
-		modelOp = glm::rotate(modelOp, glm::radians(giroZsillas), glm::vec3(0.0f, 1.0f, 0.0f));
-		modelOp = glm::scale(modelOp, glm::vec3(scalesillas));	// it's a bit too big for our scene, so scale it down
-		staticShader.setMat4("model", modelOp);
-		//PC_Chair.Draw(staticShader);
-
-		/*
-			Mesas de la segunda fila segunda seccion
-		*/
-
-		modelOp = glm::translate(glm::mat4(1.0f), glm::vec3(movXmesa7, movZmesa7, movYmesa7));
-		modelOp = glm::rotate(modelOp, glm::radians(giroZmesas), glm::vec3(0.0f, 1.0f, 0.0f));
-		modelOp = glm::scale(modelOp, glm::vec3(scaleXmesas, scaleZmesas, scaleYmesas));	// it's a bit too big for our scene, so scale it down
-		staticShader.setMat4("model", modelOp);
-		//Desk.Draw(staticShader);
-
-		modelOp = glm::translate(glm::mat4(1.0f), glm::vec3(movXmesa8, movZmesa8, movYmesa8));
-		modelOp = glm::rotate(modelOp, glm::radians(giroZmesas), glm::vec3(0.0f, 1.0f, 0.0f));
-		modelOp = glm::scale(modelOp, glm::vec3(scaleXmesas, scaleZmesas, scaleYmesas));	// it's a bit too big for our scene, so scale it down
+		modelOp = glm::mat4(1.0f);
+		modelOp = glm::scale(modelOp, glm::vec3(10.0f));
 		staticShader.setMat4("model", modelOp);
-		//Desk.Draw(staticShader);
-
-		/*
-			Display
-		*/
-
-		modelOp = glm::translate(glm::mat4(1.0f), glm::vec3(movXdisplay7, movZdisplay7, movYdisplay7));
-		modelOp = glm::rotate(modelOp, glm::radians(giroZdisplay), glm::vec3(0.0f, 1.0f, 0.0f));
-		modelOp = glm::scale(modelOp, glm::vec3(scaledisplay));	// it's a bit too big for our scene, so scale it down
-		staticShader.setMat4("model", modelOp);
-		//Display.Draw(staticShader);
-
-		modelOp = glm::translate(glm::mat4(1.0f), glm::vec3(movXdisplay8, movZdisplay8, movYdisplay8));
-		modelOp = glm::rotate(modelOp, glm::radians(giroZdisplay), glm::vec3(0.0f, 1.0f, 0.0f));
-		modelOp = glm::scale(modelOp, glm::vec3(scaledisplay));	// it's a bit too big for our scene, so scale it down
-		staticShader.setMat4("model", modelOp);
-		//Display.Draw(staticShader);
-
-		/*
-			PC_Case 2.2
-		*/
-
-		modelOp = glm::translate(glm::mat4(1.0f), glm::vec3(movXpccase7, movZpccase7, movYpccase7));
-		modelOp = glm::rotate(modelOp, glm::radians(giroZpccases), glm::vec3(0.0f, 1.0f, 0.0f));
-		modelOp = glm::scale(modelOp, glm::vec3(scalepccases));	// it's a bit too big for our scene, so scale it down
-		staticShader.setMat4("model", modelOp);
-		//PC_Case.Draw(staticShader);
-
-		modelOp = glm::translate(glm::mat4(1.0f), glm::vec3(movXpccase8, movZpccase8, movYpccase8));
-		modelOp = glm::rotate(modelOp, glm::radians(giroZpccases), glm::vec3(0.0f, 1.0f, 0.0f));
-		modelOp = glm::scale(modelOp, glm::vec3(scalepccases));	// it's a bit too big for our scene, so scale it down
-		staticShader.setMat4("model", modelOp);
-		//PC_Case.Draw(staticShader);
-
-		/*
-			Sillas de las tercera fila primera seccion
-		*/
-
-		modelOp = glm::translate(glm::mat4(1.0f), glm::vec3(movXsilla17, movZsilla17, movYsilla17));
-		modelOp = glm::rotate(modelOp, glm::radians(giroZsillas), glm::vec3(0.0f, 1.0f, 0.0f));
-		modelOp = glm::scale(modelOp, glm::vec3(scalesillas));	// it's a bit too big for our scene, so scale it down
-		staticShader.setMat4("model", modelOp);
-		//PC_Chair.Draw(staticShader);
-
-		modelOp = glm::translate(glm::mat4(1.0f), glm::vec3(movXsilla18, movZsilla18, movYsilla18));
-		modelOp = glm::rotate(modelOp, glm::radians(giroZsillas), glm::vec3(0.0f, 1.0f, 0.0f));
-		modelOp = glm::scale(modelOp, glm::vec3(scalesillas));	// it's a bit too big for our scene, so scale it down
-		staticShader.setMat4("model", modelOp);
-		//PC_Chair.Draw(staticShader);
-
-		modelOp = glm::translate(glm::mat4(1.0f), glm::vec3(movXsilla19, movZsilla19, movYsilla19));
-		modelOp = glm::rotate(modelOp, glm::radians(giroZsillas), glm::vec3(0.0f, 1.0f, 0.0f));
-		modelOp = glm::scale(modelOp, glm::vec3(scalesillas));	// it's a bit too big for our scene, so scale it down
-		staticShader.setMat4("model", modelOp);
-		//PC_Chair.Draw(staticShader);
-
-		modelOp = glm::translate(glm::mat4(1.0f), glm::vec3(movXsilla20, movZsilla20, movYsilla20));
-		modelOp = glm::rotate(modelOp, glm::radians(giroZsillas), glm::vec3(0.0f, 1.0f, 0.0f));
-		modelOp = glm::scale(modelOp, glm::vec3(scalesillas));	// it's a bit too big for our scene, so scale it down
-		staticShader.setMat4("model", modelOp);
-		//PC_Chair.Draw(staticShader);
-
-		/*
-			Mesas de la segunda fila segunda seccion
-		*/
-
-		modelOp = glm::translate(glm::mat4(1.0f), glm::vec3(movXmesa9, movZmesa9, movYmesa9));
-		modelOp = glm::rotate(modelOp, glm::radians(giroZmesas), glm::vec3(0.0f, 1.0f, 0.0f));
-		modelOp = glm::scale(modelOp, glm::vec3(scaleXmesas, scaleXmesas, scaleYmesas));	// it's a bit too big for our scene, so scale it down
-		staticShader.setMat4("model", modelOp);
-		//Desk.Draw(staticShader);
-
-		modelOp = glm::translate(glm::mat4(1.0f), glm::vec3(movXmesa10, movZmesa10, movYmesa10));
-		modelOp = glm::rotate(modelOp, glm::radians(giroZmesas), glm::vec3(0.0f, 1.0f, 0.0f));
-		modelOp = glm::scale(modelOp, glm::vec3(scaleXmesas, scaleXmesas, scaleYmesas));	// it's a bit too big for our scene, so scale it down
-		staticShader.setMat4("model", modelOp);
-		//Desk.Draw(staticShader);
-
-		/*
-			Display
-		*/
-
-		modelOp = glm::translate(glm::mat4(1.0f), glm::vec3(movXdisplay9, movZdisplay9, movYdisplay9));
-		modelOp = glm::rotate(modelOp, glm::radians(giroZdisplay), glm::vec3(0.0f, 1.0f, 0.0f));
-		modelOp = glm::scale(modelOp, glm::vec3(scaledisplay));	// it's a bit too big for our scene, so scale it down
-		staticShader.setMat4("model", modelOp);
-		//Display.Draw(staticShader);
-
-		modelOp = glm::translate(glm::mat4(1.0f), glm::vec3(movXdisplay9, movZdisplay9, movYdisplay9));
-		modelOp = glm::rotate(modelOp, glm::radians(giroZdisplay), glm::vec3(0.0f, 1.0f, 0.0f));
-		modelOp = glm::scale(modelOp, glm::vec3(scaledisplay));	// it's a bit too big for our scene, so scale it down
-		staticShader.setMat4("model", modelOp);
-		//Display.Draw(staticShader);
-
-		/*
-			PC_Case 3.1
-		*/
-
-		modelOp = glm::translate(glm::mat4(1.0f), glm::vec3(movXpccase9, movZpccase9, movYpccase9));
-		modelOp = glm::rotate(modelOp, glm::radians(giroZpccases), glm::vec3(0.0f, 1.0f, 0.0f));
-		modelOp = glm::scale(modelOp, glm::vec3(scalepccases));	// it's a bit too big for our scene, so scale it down
-		staticShader.setMat4("model", modelOp);
-		//PC_Case.Draw(staticShader);
-
-		modelOp = glm::translate(glm::mat4(1.0f), glm::vec3(movXpccase10, movZpccase10, movYpccase10));
-		modelOp = glm::rotate(modelOp, glm::radians(giroZpccases), glm::vec3(0.0f, 1.0f, 0.0f));
-		modelOp = glm::scale(modelOp, glm::vec3(scalepccases));	// it's a bit too big for our scene, so scale it down
-		staticShader.setMat4("model", modelOp);
-		//PC_Case.Draw(staticShader);
-
-		/*
-			Sillas de las tercera fila segunda seccion
-		*/
-
-		modelOp = glm::translate(glm::mat4(1.0f), glm::vec3(movXsilla21, movZsilla21, movYsilla21));
-		modelOp = glm::rotate(modelOp, glm::radians(giroZsillas), glm::vec3(0.0f, 1.0f, 0.0f));
-		modelOp = glm::scale(modelOp, glm::vec3(scalesillas));	// it's a bit too big for our scene, so scale it down
-		staticShader.setMat4("model", modelOp);
-		//PC_Chair.Draw(staticShader);
-
-		modelOp = glm::translate(glm::mat4(1.0f), glm::vec3(movXsilla22, movZsilla22, movYsilla22));
-		modelOp = glm::rotate(modelOp, glm::radians(giroZsillas), glm::vec3(0.0f, 1.0f, 0.0f));
-		modelOp = glm::scale(modelOp, glm::vec3(scalesillas));	// it's a bit too big for our scene, so scale it down
-		staticShader.setMat4("model", modelOp);
-		//PC_Chair.Draw(staticShader);
-
-		modelOp = glm::translate(glm::mat4(1.0f), glm::vec3(movXsilla23, movZsilla23, movYsilla23));
-		modelOp = glm::rotate(modelOp, glm::radians(giroZsillas), glm::vec3(0.0f, 1.0f, 0.0f));
-		modelOp = glm::scale(modelOp, glm::vec3(scalesillas));	// it's a bit too big for our scene, so scale it down
-		staticShader.setMat4("model", modelOp);
-		//PC_Chair.Draw(staticShader);
-
-		modelOp = glm::translate(glm::mat4(1.0f), glm::vec3(-35.0f, 0.0f, -43.0f));
-		modelOp = glm::rotate(modelOp, glm::radians(giroZsillas), glm::vec3(0.0f, 1.0f, 0.0f));
-		modelOp = glm::scale(modelOp, glm::vec3(scalesillas));	// it's a bit too big for our scene, so scale it down
-		staticShader.setMat4("model", modelOp);
-		//PC_Chair.Draw(staticShader);
-
-		/*
-			Mesas de la tercera fila segundaa seccion
-		*/
-
-		modelOp = glm::translate(glm::mat4(1.0f), glm::vec3(movXmesa11, movZmesa11, movYmesa11));
-		modelOp = glm::rotate(modelOp, glm::radians(giroZmesas), glm::vec3(0.0f, 1.0f, 0.0f));
-		modelOp = glm::scale(modelOp, glm::vec3(scaleXmesas, scaleZmesas, scaleYmesas));	// it's a bit too big for our scene, so scale it down
+		basealberca.Draw(staticShader);
+
+		modelOp = glm::mat4(1.0f);
+		modelOp = glm::scale(modelOp, glm::vec3(10.0f));
 		staticShader.setMat4("model", modelOp);
-		//Desk.Draw(staticShader);
-
-		modelOp = glm::translate(glm::mat4(1.0f), glm::vec3(movXmesa12, movZmesa12, movYmesa12));
-		modelOp = glm::rotate(modelOp, glm::radians(giroZmesas), glm::vec3(0.0f, 1.0f, 0.0f));
-		modelOp = glm::scale(modelOp, glm::vec3(scaleXmesas, scaleZmesas, scaleYmesas));	// it's a bit too big for our scene, so scale it down
+		asta.Draw(staticShader);
+
+		float flagAng = 0.0f;
+		if (flagsSwing)
+			flagAng = sinf(SDL_GetTicks() * flagSpeed) * flagAmp;
+
+		// Hungría
+		modelOp = glm::mat4(1.0f);
+		modelOp = glm::rotate(modelOp, glm::radians(flagAng), glm::vec3(0, 0, 1));
+		modelOp = glm::scale(modelOp, glm::vec3(10.0f));
 		staticShader.setMat4("model", modelOp);
-		//Desk.Draw(staticShader);
-
-		/*
-			Display
-		*/
-
-		modelOp = glm::translate(glm::mat4(1.0f), glm::vec3(movXdisplay11, movZdisplay11, movYdisplay11));
-		modelOp = glm::rotate(modelOp, glm::radians(giroZdisplay), glm::vec3(0.0f, 1.0f, 0.0f));
-		modelOp = glm::scale(modelOp, glm::vec3(scaledisplay));	// it's a bit too big for our scene, so scale it down
+		bandehungria.Draw(staticShader);
+
+		// Australia
+		modelOp = glm::mat4(1.0f);
+		modelOp = glm::rotate(modelOp, glm::radians(flagAng), glm::vec3(0, 0, 1));
+		modelOp = glm::scale(modelOp, glm::vec3(10.0f));
 		staticShader.setMat4("model", modelOp);
-		//Display.Draw(staticShader);
-
-		modelOp = glm::translate(glm::mat4(1.0f), glm::vec3(movXdisplay12, movZdisplay12, movYdisplay12));
-		modelOp = glm::rotate(modelOp, glm::radians(giroZdisplay), glm::vec3(0.0f, 1.0f, 0.0f));
-		modelOp = glm::scale(modelOp, glm::vec3(scaledisplay));	// it's a bit too big for our scene, so scale it down
+		banderaaustralia.Draw(staticShader);
+
+		// USA
+		modelOp = glm::mat4(1.0f);
+		modelOp = glm::rotate(modelOp, glm::radians(flagAng), glm::vec3(0, 0, 1));
+		modelOp = glm::scale(modelOp, glm::vec3(10.0f));
 		staticShader.setMat4("model", modelOp);
-		//Display.Draw(staticShader);
-
-		/*
-			PC_Case 3.2
-		*/
-
-		modelOp = glm::translate(glm::mat4(1.0f), glm::vec3(movXpccase11, movZpccase11, movYpccase11));
-		modelOp = glm::rotate(modelOp, glm::radians(giroZpccases), glm::vec3(0.0f, 1.0f, 0.0f));
-		modelOp = glm::scale(modelOp, glm::vec3(scalepccases));	// it's a bit too big for our scene, so scale it down
+		banderausa.Draw(staticShader);
+
+
+
+		modelOp = glm::mat4(1.0f);
+		modelOp = glm::scale(modelOp, glm::vec3(10.0f));
 		staticShader.setMat4("model", modelOp);
-		//PC_Case.Draw(staticShader);
-
-		modelOp = glm::translate(glm::mat4(1.0f), glm::vec3(movXpccase12, movZpccase12, movYpccase12));
-		modelOp = glm::rotate(modelOp, glm::radians(giroZpccases), glm::vec3(0.0f, 1.0f, 0.0f));
-		modelOp = glm::scale(modelOp, glm::vec3(scalepccases));	// it's a bit too big for our scene, so scale it down
+		baseladrillo.Draw(staticShader);
+
+		modelOp = glm::mat4(1.0f);
+		modelOp = glm::scale(modelOp, glm::vec3(10.0f));
 		staticShader.setMat4("model", modelOp);
-		//PC_Case.Draw(staticShader);
+		boyas.Draw(staticShader);
+
+		// ------------------- DIBUJAR GRADAS (bancas + butacas) -------------------
+		if (gradesScale01 > 0.0f)
+		{
+			float s = 10.0f * gradesScale01;
+
+			// Banca derecha
+			modelOp = glm::mat4(1.0f);
+			modelOp = glm::translate(modelOp, glm::vec3(0.0f, gradesLiftY, 0.0f));
+			modelOp = glm::rotate(modelOp, glm::radians(gradesRotY), glm::vec3(0.0f, 1.0f, 0.0f));
+			modelOp = glm::scale(modelOp, glm::vec3(s));
+			staticShader.setMat4("model", modelOp);
+			bancaderecha.Draw(staticShader);
 
+			// Banca frente
+			modelOp = glm::mat4(1.0f);
+			modelOp = glm::translate(modelOp, glm::vec3(0.0f, gradesLiftY, 0.0f));
+			modelOp = glm::rotate(modelOp, glm::radians(gradesRotY), glm::vec3(0.0f, 1.0f, 0.0f));
+			modelOp = glm::scale(modelOp, glm::vec3(s));
+			staticShader.setMat4("model", modelOp);
+			bancafrente.Draw(staticShader);
 
-		modelOp = glm::translate(glm::mat4(1.0f), glm::vec3(160.0f, 0.0f, 50.0f));
-		modelOp = glm::rotate(modelOp, glm::radians(180.0f), glm::vec3(0.0f, 1.0f, 0.0f));
-		modelOp = glm::scale(modelOp, glm::vec3(0.5f));	// it's a bit too big for our scene, so scale it down	
+			// Banca izquierda
+			modelOp = glm::mat4(1.0f);
+			modelOp = glm::translate(modelOp, glm::vec3(0.0f, gradesLiftY, 0.0f));
+			modelOp = glm::rotate(modelOp, glm::radians(gradesRotY), glm::vec3(0.0f, 1.0f, 0.0f));
+			modelOp = glm::scale(modelOp, glm::vec3(s));
+			staticShader.setMat4("model", modelOp);
+			bancaizq.Draw(staticShader);
+
+			// Butaca derecha
+			modelOp = glm::mat4(1.0f);
+			modelOp = glm::translate(modelOp, glm::vec3(0.0f, gradesLiftY, 0.0f));
+			modelOp = glm::rotate(modelOp, glm::radians(gradesRotY), glm::vec3(0.0f, 1.0f, 0.0f));
+			modelOp = glm::scale(modelOp, glm::vec3(s));
+			staticShader.setMat4("model", modelOp);
+			butacaderecha.Draw(staticShader);
+
+			// Butaca frente
+			modelOp = glm::mat4(1.0f);
+			modelOp = glm::translate(modelOp, glm::vec3(0.0f, gradesLiftY, 0.0f));
+			modelOp = glm::rotate(modelOp, glm::radians(gradesRotY), glm::vec3(0.0f, 1.0f, 0.0f));
+			modelOp = glm::scale(modelOp, glm::vec3(s));
+			staticShader.setMat4("model", modelOp);
+			//butacafrente.Draw(staticShader);
+
+			// Butaca izquierda
+			modelOp = glm::mat4(1.0f);
+			modelOp = glm::translate(modelOp, glm::vec3(0.0f, gradesLiftY, 0.0f));
+			modelOp = glm::rotate(modelOp, glm::radians(gradesRotY), glm::vec3(0.0f, 1.0f, 0.0f));
+			modelOp = glm::scale(modelOp, glm::vec3(s));
+			staticShader.setMat4("model", modelOp);
+			butacaizq.Draw(staticShader);
+		}
+
+
+
+		// ------------------- Pelota animada -------------------
+		modelOp = glm::mat4(1.0f);
+		modelOp = glm::translate(modelOp, glm::vec3(ballX, ballY, ballZ));
+
+		// Giro coherente con dirección: si va por X gira sobre Z, si va por Z gira sobre X
+		if (ballEdge == 0 || ballEdge == 2) {
+			modelOp = glm::rotate(modelOp, glm::radians(ballRot), glm::vec3(0.0f, 0.0f, 1.0f));
+		}
+		else {
+			modelOp = glm::rotate(modelOp, glm::radians(ballRot), glm::vec3(1.0f, 0.0f, 0.0f));
+		}
+
+		modelOp = glm::scale(modelOp, glm::vec3(10.0f));
 		staticShader.setMat4("model", modelOp);
-		//Microsoft.Draw(staticShader);
+		pelota.Draw(staticShader);
 
-		/*modelOp = glm::translate(glm::mat4(1.0f), glm::vec3(75.0f, 50.0f, -60.0f));
-		modelOp = glm::scale(modelOp, glm::vec3(0.5f));	// it's a bit too big for our scene, so scale it down
+
+		modelOp = glm::mat4(1.0f);
+		modelOp = glm::scale(modelOp, glm::vec3(10.0f));
 		staticShader.setMat4("model", modelOp);
-		Grafica.Draw(staticShader);*/
+		plataforma.Draw(staticShader);
 
+		// ------------------- PODIUM (animado / se mete a pokeball) -------------------
+		if (podiumVisible)
+		{
+			modelOp = glm::mat4(1.0f);
+			modelOp = glm::translate(modelOp, podiumAnimPos);
+			modelOp = glm::scale(modelOp, glm::vec3(podiumAnimScale));
+			staticShader.setMat4("model", modelOp);
+			podium.Draw(staticShader);
+		}
 
+		// ------------------- POKEBALL (animada: se mueve y abre/cierra) -------------------
+		glm::mat4 pbWorld = glm::mat4(1.0f);
+		pbWorld = glm::translate(pbWorld, pbPos);
+		pbWorld = glm::scale(pbWorld, glm::vec3(pbScaleWorld));
 
+		// Base
+		modelOp = pbWorld;
+		staticShader.setMat4("model", modelOp);
+		base_pokeball.Draw(staticShader);
 
-		modelOp = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 0.0f, 0.0f));
-		//modelOp = glm::rotate(modelOp, glm::radians(45.0f), glm::vec3(0.0f, 1.0f, 0.0f));
-		tmpPokeball = modelOp = glm::rotate(modelOp, glm::radians(giropokeball), glm::vec3(1.0f, 0.0f, 0.0f));
-		modelOp = glm::scale(modelOp, glm::vec3(10.0f));	// it's a bit too big for our scene, so scale it down
+		// Pivote (si tu modelo realmente es el botón/centro)
+		modelOp = pbWorld;
 		staticShader.setMat4("model", modelOp);
 		pivote_pokeball.Draw(staticShader);
 
-		modelOp = glm::translate(tmpPokeball, glm::vec3(0.0f, 0.0f, 0.0f)); //
-		modelOp = glm::rotate(modelOp, glm::radians(girotapapokeball), glm::vec3(1.0f, 0.0f,0.0f));					//	CAMBIO EN EL CODIGO
-		modelOp = glm::scale(modelOp, glm::vec3(10.0f));	// it's a bit too big for our scene, so scale it down
-		staticShader.setMat4("model", modelOp);									//
-		tapa_pokeball.Draw(staticShader);										//
+		// Tapa: rotación alrededor de una bisagra local
+		modelOp = pbWorld;
+		// llevar al punto bisagra, rotar, regresar
+		modelOp = glm::translate(modelOp, pbTopHingeLocal);
+		modelOp = glm::rotate(modelOp, glm::radians(pbOpenAngle), pbTopPivotAxis);
+		modelOp = glm::translate(modelOp, -pbTopHingeLocal);
 
-		modelOp = glm::translate(tmpPokeball, glm::vec3(0.0f, 0.0f, 0.0f)); //
-		modelOp = glm::scale(modelOp, glm::vec3(10.0f));	// it's a bit too big for our scene, so scale it down
-		staticShader.setMat4("model", modelOp);									//
-		base_pokeball.Draw(staticShader);										//
-
-		/*
-		modelOp = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 0.0f, 0.0f));
-		modelOp = glm::scale(modelOp, glm::vec3(1.0f));	// it's a bit too big for our scene, so scale it down
 		staticShader.setMat4("model", modelOp);
-		Table.Draw(staticShader);*/
+		tapa_pokeball.Draw(staticShader);
 
 
+		////////////////////////////
 
-		// glfw: swap buffers and poll IO events (keys pressed/released, mouse moved etc.)
-		// -------------------------------------------------------------------------------
+		modelOp = glm::translate(glm::mat4(1.0f), glm::vec3(250.0f, 0.0f, -10.0f));
+		modelOp = glm::rotate(modelOp, glm::radians(-90.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+		staticShader.setMat4("model", modelOp);
+		//casaDoll.Draw(staticShader);
 
-		//Con estas lineas se dibuja el mar y las montaÃ±as y sin esta linea el fondo es negro
+		modelOp = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, -1.75f, 0.0f));
+		modelOp = glm::scale(modelOp, glm::vec3(0.2f));
+		staticShader.setMat4("model", modelOp);
+		//piso.Draw(staticShader);
+
+		modelOp = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 0.0f, -70.0f));
+		modelOp = glm::scale(modelOp, glm::vec3(5.0f));
+		staticShader.setMat4("model", modelOp);
+		staticShader.setVec3("dirLight.specular", glm::vec3(0.0f, 0.0f, 0.0f));
+		//casaVieja.Draw(staticShader);
+
+		//-------------------------------------------------------------------------------------
+		// draw skybox as last
+		// -------------------
 		skyboxShader.use();
 		skybox.Draw(skyboxShader, viewOp, projectionOp, camera);
 
@@ -3493,23 +1222,26 @@ int main()
 			SDL_Delay((int)(LOOP_TIME - deltaTime));
 		}
 
+		
+		// glfw: swap buffers and poll IO events (keys pressed/released, mouse moved etc.)
+		// -------------------------------------------------------------------------------
 		glfwSwapBuffers(window);
 		glfwPollEvents();
 	}
-
 	// glfw: terminate, clearing all previously allocated GLFW resources.
 	// ------------------------------------------------------------------
-	//glDeleteVertexArrays(2, VAO);
-	//glDeleteBuffers(2, VBO);
+	glDeleteVertexArrays(2, VAO);
+	glDeleteBuffers(2, VBO);
+	//skybox.Terminate();
 	glfwTerminate();
 	return 0;
 }
 
 // process all input: query GLFW whether relevant keys are pressed/released this frame and react accordingly
 // ---------------------------------------------------------------------------------------------------------
-void my_input(GLFWwindow* window, int key, int scancode, int action, int mode)
+void my_input(GLFWwindow* window, int key, int scancode, int action, int mode) 
 {
-	if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)  //GLFW_RELEASE
+	if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
 		glfwSetWindowShouldClose(window, true);
 
 	if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
@@ -3521,60 +1253,6 @@ void my_input(GLFWwindow* window, int key, int scancode, int action, int mode)
 	if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
 		camera.ProcessKeyboard(RIGHT, (float)deltaTime);
 
-	if (glfwGetKey(window, GLFW_KEY_PAGE_UP) == GLFW_PRESS)
-		movY += 0.08f;
-	if (glfwGetKey(window, GLFW_KEY_PAGE_DOWN) == GLFW_PRESS)
-		movY -= 0.08f;
-	if (glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS) //
-		angX += 1.0f;
-	if (glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS) //
-		angX -= 1.0f;
-	if (glfwGetKey(window, GLFW_KEY_RIGHT) == GLFW_PRESS) //
-		angY += 1.0f;
-	if (glfwGetKey(window, GLFW_KEY_LEFT) == GLFW_PRESS) //
-		angY -= 1.0f;
-	if (glfwGetKey(window, GLFW_KEY_HOME) == GLFW_PRESS) //
-		angZ += 1.0f;
-	if (glfwGetKey(window, GLFW_KEY_END) == GLFW_PRESS) //
-		angZ -= 1.0f;
-
-	if (glfwGetKey(window, GLFW_KEY_F1) == GLFW_PRESS)
-		scalesillas--;
-	if (glfwGetKey(window, GLFW_KEY_F2) == GLFW_PRESS)
-		scalesillas++;
-	if (glfwGetKey(window, GLFW_KEY_F3) == GLFW_PRESS)
-		giroZsillas--;
-	if (glfwGetKey(window, GLFW_KEY_F4) == GLFW_PRESS)
-		giroZsillas++;
-	if (glfwGetKey(window, GLFW_KEY_F5) == GLFW_PRESS)
-		scaleXmesas--;
-	if (glfwGetKey(window, GLFW_KEY_F6) == GLFW_PRESS)
-		scaleXmesas++;
-	if (glfwGetKey(window, GLFW_KEY_F7) == GLFW_PRESS)
-		scaleYmesas--;
-	if (glfwGetKey(window, GLFW_KEY_F8) == GLFW_PRESS)
-		scaleYmesas;
-	if (glfwGetKey(window, GLFW_KEY_F9) == GLFW_PRESS)
-		scaleZmesas--;
-	if (glfwGetKey(window, GLFW_KEY_F10) == GLFW_PRESS)
-		scaleZmesas++;
-	if (glfwGetKey(window, GLFW_KEY_N) == GLFW_PRESS)
-		giroZmesas--;
-	if (glfwGetKey(window, GLFW_KEY_M) == GLFW_PRESS)
-		giroZmesas++;
-
-	if (key == GLFW_KEY_1 && action == GLFW_PRESS) {
-		animacion ^= true;
-	}
-	if (key == GLFW_KEY_2 && action == GLFW_PRESS) {
-		animacion2 ^= true;
-	}
-	if (key == GLFW_KEY_3 && action == GLFW_PRESS) {
-		animacion3 ^= true;
-	}
-	if (key == GLFW_KEY_4 && action == GLFW_PRESS) {
-		animacion4 ^= true;
-	}
 
 	//To play KeyFrame animation 
 	if (key == GLFW_KEY_P && action == GLFW_PRESS)
@@ -3605,6 +1283,32 @@ void my_input(GLFWwindow* window, int key, int scancode, int action, int mode)
 			saveFrame();
 		}
 	}
+	// ------------------- Controles Pelota -------------------
+	if (key == GLFW_KEY_T && action == GLFW_PRESS)
+		ballFollowPerimeter = !ballFollowPerimeter;
+
+	if (key == GLFW_KEY_KP_ADD && action == GLFW_PRESS)   // keypad +
+		ballSpeed += 5.0f;
+
+	if (key == GLFW_KEY_KP_SUBTRACT && action == GLFW_PRESS) // keypad -
+		ballSpeed = (ballSpeed > 5.0f) ? (ballSpeed - 5.0f) : 5.0f;
+
+	// Iniciar secuencia pokeball -> podium
+	if (key == GLFW_KEY_O && action == GLFW_PRESS)  // O = iniciar
+	{
+		pbSequence = true;
+		pbState = PB_IDLE; // para que reinicie bien
+	}
+
+	// R = reiniciar animación gradas
+	if (key == GLFW_KEY_R && action == GLFW_PRESS)
+	{
+		gradesRotY = 0.0f;
+		gradesScale01 = 1.0f;
+		gradesLiftY = 0.0f;
+		gradesAnim = true;
+	}
+
 }
 
 // glfw: whenever the window size changed (by OS or user resize) this callback function executes
@@ -3615,7 +1319,7 @@ void framebuffer_size_callback(GLFWwindow* window, int width, int height) {
 }
 
 // glfw: whenever the mouse moves, this callback is called
-void mouse_callback(GLFWwindow* window, double xpos, double ypos)
+void mouse_callback(GLFWwindow* window, double xpos, double ypos) 
 {
 	if (firstMouse)
 	{
@@ -3637,6 +1341,3 @@ void mouse_callback(GLFWwindow* window, double xpos, double ypos)
 void scroll_callback(GLFWwindow* window, double xoffset, double yoffset) {
 	camera.ProcessMouseScroll(yoffset);
 }
-
-
-
